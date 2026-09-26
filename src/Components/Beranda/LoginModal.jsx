@@ -1,27 +1,24 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // IMPORT NAVIGASI
+import { useNavigate } from 'react-router-dom'; 
 import { X, Mail, Lock, LogIn } from 'lucide-react';
 import logoBartrans from '../../assets/Bartrans.png'; 
 
-export default function LoginModal({ isOpen, onClose }) {
+export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate(); // INISIALISASI FUNGSI NAVIGASI
+  const navigate = useNavigate(); 
 
   if (!isOpen) return null;
 
-  // FUNGSI VALIDASI LOGIN DUMMY
   const handleLogin = (e) => {
     e.preventDefault();
     setError('');
 
-    // Cek Kredensial Admin Dummy
     if (email === 'admin@bartrans.com' && password === 'admin123') {
-      onClose(); // Tutup modalnya
-      navigate('/admin'); // Lempar ke halaman dashboard!
+      onClose(); 
+      navigate('/admin'); 
     } else {
-      // Kalau salah, kasih pesan error
       setError('Email atau password salah! (Coba: admin@bartrans.com / admin123)');
     }
   };
@@ -43,10 +40,7 @@ export default function LoginModal({ isOpen, onClose }) {
             <p className="text-gray-500 text-sm">Masuk ke akun BarTrans kamu.</p>
           </div>
 
-          {/* Form dipasangkan fungsi handleLogin saat disubmit */}
           <form className="space-y-5" onSubmit={handleLogin}>
-            
-            {/* Notifikasi Error jika login gagal */}
             {error && (
               <div className="bg-red-50 text-red-600 text-xs p-3 rounded-lg border border-red-100 text-center font-medium">
                 {error}
@@ -62,12 +56,9 @@ export default function LoginModal({ isOpen, onClose }) {
                   <Mail size={16} className="text-gray-400" />
                 </div>
                 <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@bartrans.com"
+                  type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@bartrans.com" required
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-10 pr-4 text-sm text-gray-900 outline-none focus:border-[#00437a] transition-colors placeholder:text-gray-400 shadow-sm"
-                  required
                 />
               </div>
             </div>
@@ -82,12 +73,9 @@ export default function LoginModal({ isOpen, onClose }) {
                   <Lock size={16} className="text-gray-400" />
                 </div>
                 <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="admin123"
+                  type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                  placeholder="admin123" required
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-10 pr-4 text-sm text-gray-900 outline-none focus:border-[#00437a] transition-colors placeholder:text-gray-400 shadow-sm"
-                  required
                 />
               </div>
             </div>
@@ -99,7 +87,22 @@ export default function LoginModal({ isOpen, onClose }) {
           </form>
 
           <p className="text-center text-xs text-gray-500 mt-6">
-            Belum punya akun? <a href="#" className="text-[#00437a] font-semibold hover:underline">Daftar di sini</a>
+            Belum punya akun?{' '}
+            <button 
+              type="button"
+              onClick={(e) => { 
+                e.preventDefault(); 
+                // 🔥 JEBAKAN BATMAN: Cek apakah props dari App.jsx beneran masuk 🔥
+                if (onSwitchToRegister) {
+                  onSwitchToRegister(); 
+                } else {
+                  alert("TERCYDUK! 🚨 Lu masih manggil <LoginModal/> dari dalem Beranda.jsx! Hapus komponen modal yang ada di Beranda, dan pakai props onOpenLogin dari App.jsx aja.");
+                }
+              }} 
+              className="text-[#00437a] font-bold hover:underline"
+            >
+              Daftar di sini
+            </button>
           </p>
         </div>
       </div>
