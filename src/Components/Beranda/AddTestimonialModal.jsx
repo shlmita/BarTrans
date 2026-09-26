@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { X, Star, User, Briefcase, MessageSquare, ImagePlus } from 'lucide-react';
+import { X, Star, User, Briefcase, MessageSquare, ImagePlus, Tag } from 'lucide-react';
 
 export default function AddTestimoniModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
-    nama: '', role: '', rating: 5, comment: '', gambar: ''
+    nama: '', role: '', layanan: 'Travel Reguler', rating: 5, comment: '', gambar: ''
   });
   const [hoverRating, setHoverRating] = useState(0);
 
@@ -74,17 +74,36 @@ export default function AddTestimoniModal({ isOpen, onClose }) {
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:border-[#00437a] outline-none transition-all" />
             </div>
 
-            <div>
-              <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                <Briefcase size={14} className="text-[#f26e22]" /> Pekerjaan / Peran <span className="text-gray-400 normal-case lowercase font-medium">(Opsional)</span>
-              </label>
-              <input type="text" name="role" value={formData.role} onChange={handleChange} placeholder="Contoh: Traveler & Blogger"
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:border-[#00437a] outline-none transition-all" />
+            {/* Kolom Berjejer: Peran & Layanan */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                  <Briefcase size={14} className="text-[#f26e22]" /> Pekerjaan / Peran
+                </label>
+                <input type="text" name="role" value={formData.role} onChange={handleChange} placeholder="Contoh: Traveler"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:border-[#00437a] outline-none transition-all" />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                  <Tag size={14} className="text-emerald-500" /> Jasa yang Digunakan
+                </label>
+                <select 
+                  name="layanan" value={formData.layanan} onChange={handleChange}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:border-[#00437a] outline-none transition-all font-bold cursor-pointer text-[#00437a]"
+                >
+                  <option value="Travel Reguler">Travel Reguler</option>
+                  <option value="Sewa Mobil">Sewa Mobil</option>
+                  <option value="Jasa Angkut Truk">Jasa Angkut Truk</option>
+                  <option value="Paket Wisata">Paket Wisata</option>
+                  <option value="Penginapan / Villa">Penginapan / Villa</option>
+                </select>
+              </div>
             </div>
 
             <div>
               <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                <MessageSquare size={14} className="text-emerald-500" /> Komentar / Ulasan
+                <MessageSquare size={14} className="text-[#00437a]" /> Komentar / Ulasan
               </label>
               <textarea name="comment" required rows="3" value={formData.comment} onChange={handleChange} placeholder="Ceritakan pengalaman Anda di sini..."
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-[#00437a] outline-none transition-all resize-none custom-scrollbar" />
