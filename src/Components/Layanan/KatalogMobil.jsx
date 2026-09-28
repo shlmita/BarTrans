@@ -1,8 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Car } from 'lucide-react';
 import ProductCard from '../Beranda/ProductCard';
 
-export default function KatalogMobil({ data, onOpenModal, getPriceLabel, getButtonText, onBack }) {
+export default function KatalogMobil({ onOpenModal, getPriceLabel, getButtonText, onBack }) {
+  // 1. State untuk menyimpan data dari database
+  const [data, setData] = useState([]);
+
+  // 2. Fetch data dari Backend API
+  useEffect(() => {
+    const fetchKatalog = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/mobil');
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          // 3. Format data admin agar cocok dengan UI ProductCard
+          const formattedData = result.data.map(mobil => ({
+            id: mobil.id,
+            title: mobil.unit,
+            img: mobil.gambar, 
+            // Fallback teks jika admin tidak memisahkan deskripsi dengan garis miring (/)
+            desc: mobil.deskripsi || 'Automatic / TBA / Standar',
+            price: `Rp ${Number(mobil.harga).toLocaleString('id-ID')}`,
+            tag: mobil.status // Menyimpan status untuk digunakan di Modal
+          }));
+          setData(formattedData);
+        }
+      } catch (error) {
+        console.error("Gagal mengambil data katalog:", error);
+      }
+    };
+    fetchKatalog();
+  }, []);
+
   return (
     <div className="animate-fade-in w-full text-left bg-transparent min-h-[60vh]">
       <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-[#f26e22] mb-8 transition-colors group">

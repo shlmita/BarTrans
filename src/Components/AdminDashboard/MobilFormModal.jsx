@@ -9,20 +9,26 @@ export default function MobilFormModal({ isOpen, onClose, onSave, editData }) {
     deskripsi: '', kondisi: 'Sangat Baik', fitur: [], gambar: ''
   });
 
+  // PERBAIKAN: Pastikan state terisi dengan data yang benar setiap kali modal dibuka (Edit vs Tambah)
   useEffect(() => {
-    if (editData) {
-      setFormData({
-        ...editData,
-        fitur: editData.fitur || [],
-        gambar: editData.gambar || ''
-      });
-    } else {
-      setFormData({
-        unit: '', nopol: '', lokasi: '', brand: '', status: 'Tersedia', tglReady: 'Selalu Ready', harga: 0, 
-        deskripsi: '', kondisi: 'Sangat Baik', fitur: [], gambar: ''
-      });
+    if (isOpen) {
+      if (editData) {
+        setFormData({
+          ...editData,
+          // Parsing fitur jika formatnya string dari database API, atau gunakan array default
+          fitur: Array.isArray(editData.fitur) 
+                 ? editData.fitur 
+                 : (typeof editData.fitur === 'string' ? JSON.parse(editData.fitur) : []),
+          gambar: editData.gambar || ''
+        });
+      } else {
+        setFormData({
+          unit: '', nopol: '', lokasi: '', brand: '', status: 'Tersedia', tglReady: 'Selalu Ready', harga: 0, 
+          deskripsi: '', kondisi: 'Sangat Baik', fitur: [], gambar: ''
+        });
+      }
     }
-  }, [editData, isOpen]);
+  }, [isOpen, editData]);
 
   if (!isOpen) return null;
 
@@ -84,14 +90,12 @@ export default function MobilFormModal({ isOpen, onClose, onSave, editData }) {
         <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
           <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar bg-white">
             
-            {/* COMPONENT GAMBAR */}
             <MobilImageUpload 
               gambar={formData.gambar}
               onUpload={handleImageUpload}
               onRemove={handleRemoveImage}
             />
 
-            {/* COMPONENT FORM INPUT */}
             <MobilFormFields 
               formData={formData} 
               handleChange={handleChange} 

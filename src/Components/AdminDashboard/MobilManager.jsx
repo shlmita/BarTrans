@@ -1,23 +1,32 @@
-import React, { useState } from 'react';
-import { Edit2, Plus, CarFront, Info, MapPin, Building2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Edit2, Plus, CarFront, Info, MapPin, Building2, Trash2 } from 'lucide-react';
 import MobilFormModal from './MobilFormModal';
 
-// Data dummy awal dengan tambahan lokasi & brand
-const initialData = [
-  { 
-    id: 1, unit: 'Toyota Alphard', nopol: 'K 1234 AB', lokasi: 'Garasi Pusat Pati', brand: 'BarTrans Rent', status: 'Tersedia', tglReady: 'Selalu Ready', harga: 2500000,
-    deskripsi: 'Warna Hitam, Bensin', kondisi: 'Sangat Baik', fitur: ['AC Dingin', 'Kursi Kulit', 'Sunroof'] 
-  },
-  { 
-    id: 2, unit: 'Mitsubishi Pajero', nopol: 'K 5678 CD', lokasi: 'Cabang Semarang', brand: 'Mitra A', status: 'Disewa', tglReady: '28 Sep 2026', harga: 1500000,
-    deskripsi: 'Warna Putih, Diesel', kondisi: 'Baik', fitur: ['AC Dingin', 'Kamera Mundur'] 
-  },
-];
-
 export default function MobilManager() {
-  const [mobilData, setMobilData] = useState(initialData);
+  const [mobilData, setMobilData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMobil, setSelectedMobil] = useState(null);
+
+  // Ambil Data dari API
+  const fetchMobil = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/mobil');
+      const result = await response.json();
+      if (result.status === 'success') {
+        const formattedData = result.data.map(item => ({
+          ...item,
+          fitur: typeof item.fitur === 'string' ? JSON.parse(item.fitur) : (item.fitur || [])
+        }));
+        setMobilData(formattedData);
+      }
+    } catch (error) {
+      console.error("Gagal mengambil data dari API:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMobil();
+  }, []);
 
   const handleAddClick = () => {
     setSelectedMobil(null);
@@ -25,17 +34,51 @@ export default function MobilManager() {
   };
 
   const handleEditClick = (item) => {
-    setSelectedMobil(item);
+    setSelectedMobil(item); // Ini akan mengisi props 'editData' di Modal
     setIsModalOpen(true);
   };
 
-  const handleSaveData = (formData) => {
-    if (selectedMobil) {
-      setMobilData(prev => prev.map(item => item.id === formData.id ? formData : item));
-    } else {
-      setMobilData(prev => [...prev, { ...formData, id: Date.now() }]);
+  // Simpan Data (POST/PUT) ke API
+  const handleSaveData = async (formData) => {
+    try {
+      if (selectedMobil) {
+        // Proses Update (Edit)
+        const response = await fetch(`http://localhost:5000/api/mobil/${selectedMobil.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        const result = await response.json();
+        if (result.status === 'success') fetchMobil();
+      } else {
+        // Proses Tambah Baru
+        const response = await fetch('http://localhost:5000/api/mobil', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        const result = await response.json();
+        if (result.status === 'success') fetchMobil();
+      }
+    } catch (error) {
+      console.error("Gagal menyimpan data:", error);
     }
     setIsModalOpen(false);
+  };
+
+  // Hapus Data (DELETE) dari API
+  const handleDelete = async (id) => {
+    if (window.confirm("Yakin ingin menghapus armada ini?")) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/mobil/${id}`, {
+          method: 'DELETE'
+        });
+        const result = await response.json();
+        if (result.status === 'success') fetchMobil();
+      } catch (error) {
+        console.error("Gagal menghapus data:", error);
+      }
+    }
   };
 
   return (
@@ -63,7 +106,6 @@ export default function MobilManager() {
           <thead className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">
             <tr>
               <th className="py-2 px-4 font-bold">Unit Mobil & Nopol</th>
-              {/* 🔥 KOLOM BARU UNTUK LOKASI & BRAND 🔥 */}
               <th className="py-2 px-4 font-bold">Lokasi & Brand</th>
               <th className="py-2 px-4 font-bold">Spesifikasi Singkat</th>
               <th className="py-2 px-4 font-bold">Status & Ready</th>
@@ -77,13 +119,20 @@ export default function MobilManager() {
                 
                 {/* Kolom 1: Unit & Nopol */}
                 <td className="py-4 px-4 rounded-l-2xl">
-                  <div className="font-bold text-[#00437a] text-base">{m.unit}</div>
-                  <div className="text-gray-500 font-mono text-xs mt-0.5 bg-gray-200 inline-block px-2 py-0.5 rounded">
-                    {m.nopol}
+                  <div className="flex items-center gap-3">
+                    {m.gambar && (
+                       <img src={m.gambar} alt={m.unit} className="w-10 h-10 object-cover rounded-lg shadow-sm border border-gray-200" />
+                    )}
+                    <div>
+                      <div className="font-bold text-[#00437a] text-base">{m.unit}</div>
+                      <div className="text-gray-500 font-mono text-xs mt-0.5 bg-gray-200 inline-block px-2 py-0.5 rounded">
+                        {m.nopol}
+                      </div>
+                    </div>
                   </div>
                 </td>
                 
-                {/* 🔥 Kolom 2: Lokasi & Brand Rental 🔥 */}
+                {/* Kolom 2: Lokasi & Brand Rental */}
                 <td className="py-4 px-4">
                   <div className="flex flex-col gap-1.5">
                     <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
@@ -126,18 +175,27 @@ export default function MobilManager() {
                 
                 {/* Kolom 5: Harga */}
                 <td className="py-4 px-4 font-bold text-gray-800">
-                  Rp {m.harga.toLocaleString('id-ID')}
+                  Rp {Number(m.harga || 0).toLocaleString('id-ID')}
                 </td>
                 
                 {/* Kolom 6: Aksi */}
                 <td className="py-4 px-4 text-center rounded-r-2xl">
-                  <button 
-                    onClick={() => handleEditClick(m)} 
-                    title="Edit Unit"
-                    className="p-2 bg-white border border-gray-200 text-[#00437a] rounded-xl hover:bg-[#00437a] hover:text-white transition-all shadow-sm group-hover:shadow-md mx-auto"
-                  >
-                    <Edit2 size={16} />
-                  </button>
+                  <div className="flex items-center justify-center gap-2">
+                    <button 
+                      onClick={() => handleEditClick(m)} 
+                      title="Edit Unit"
+                      className="p-2 bg-white border border-gray-200 text-[#00437a] rounded-xl hover:bg-[#00437a] hover:text-white transition-all shadow-sm group-hover:shadow-md"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(m.id)} 
+                      title="Hapus Unit"
+                      className="p-2 bg-white border border-gray-200 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm group-hover:shadow-md"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

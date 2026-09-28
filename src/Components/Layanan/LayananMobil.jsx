@@ -1,7 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ProductCard from '../Beranda/ProductCard';
 
-export default function LayananMobil({ data, onOpenModal, getPriceLabel, getButtonText }) {
+export default function LayananMobil({ onOpenModal, getPriceLabel, getButtonText }) {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchLayanan = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/mobil');
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          const formattedData = result.data.map(mobil => ({
+            id: mobil.id,
+            title: mobil.unit,
+            img: mobil.gambar,
+            desc: mobil.deskripsi || 'Automatic / TBA / Standar',
+            price: `Rp ${Number(mobil.harga).toLocaleString('id-ID')}`,
+            tag: mobil.status
+          }));
+          setData(formattedData);
+        }
+      } catch (error) {
+        console.error("Gagal mengambil data layanan:", error);
+      }
+    };
+    fetchLayanan();
+  }, []);
+
   return (
     <div className="animate-fade-in w-full text-left">
       <div className="mb-8 bg-white border border-gray-200 border-l-4 border-l-[#00437a] p-5 md:p-6 rounded-r-2xl shadow-sm">

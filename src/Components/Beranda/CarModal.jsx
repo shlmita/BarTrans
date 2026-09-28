@@ -6,7 +6,9 @@ export default function CarModal({ item, isOpen, onClose, onProceedCheckout }) {
   const [startDate, setStartDate] = useState('');
   const [rentalDays, setRentalDays] = useState(1);
   const today = new Date().toISOString().split('T')[0];
-  const isReady = item ? item.id !== 2 : false;
+  
+  // PERUBAHAN LOGIKA: Membaca status database (Tersedia) bukan lagi membaca ID secara statis
+  const isReady = item ? item.tag === 'Tersedia' : false;
 
   const getNumericPrice = (priceStr) => parseInt(priceStr.replace(/[^0-9]/g, ''), 10) || 0;
   const unitPrice = item ? getNumericPrice(item.price) : 0;
@@ -19,7 +21,7 @@ export default function CarModal({ item, isOpen, onClose, onProceedCheckout }) {
 
   const isReadyToCheckout = isReady && startDate !== '';
   let buttonText = 'Lanjut Pembayaran';
-  if (!isReady) buttonText = 'Unit Sedang Disewa';
+  if (!isReady) buttonText = 'Unit Sedang Disewa / Maintenance';
   else if (startDate === '') buttonText = 'Pilih Tanggal Sewa';
 
   return (
