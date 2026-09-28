@@ -1,5 +1,6 @@
-import React from 'react';
-import { Star, Quote } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, Quote, Plus } from 'lucide-react';
+import AddTestimoniModal from './AddTestimonialModal'; // 🔥 IMPORT MODAL BARU
 
 const reviews = [
   {
@@ -29,11 +30,26 @@ const reviews = [
 ];
 
 export default function Testimonials({ onSeeMore }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <section className="py-20 px-4 md:px-8 max-w-7xl mx-auto">
-      <div className="text-center mb-16">
-        <h2 className="text-3xl font-bold mb-2 text-[#00437a]">What Our <span className="text-[#f26e22]">Clients Say</span></h2>
-        <p className="text-gray-500 text-sm">Mereka yang sudah merasakan kemudahan perjalanan bersama kami.</p>
+      
+      {/* HEADER SECTION & TOMBOL TAMBAH */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+        <div className="text-center md:text-left">
+          <h2 className="text-3xl font-bold mb-2 text-[#00437a]">What Our <span className="text-[#f26e22]">Clients Say</span></h2>
+          <p className="text-gray-500 text-sm">Mereka yang sudah merasakan kemudahan perjalanan bersama kami.</p>
+        </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="group flex items-center gap-2 px-5 py-3 bg-white border-2 border-[#00437a] text-[#00437a] hover:bg-[#00437a] hover:text-white text-sm font-bold rounded-full transition-all duration-300 shadow-sm hover:shadow-lg"
+        >
+          <div className="bg-[#00437a] text-white group-hover:bg-white group-hover:text-[#00437a] rounded-full p-1 transition-colors">
+            <Plus size={14} strokeWidth={3} />
+          </div>
+          Tulis Ulasan
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -77,6 +93,9 @@ export default function Testimonials({ onSeeMore }) {
           </svg>
         </button>
       </div>
+
+      {/* PANGGIL MODAL */}
+      <AddTestimoniModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </section>
   );
 }

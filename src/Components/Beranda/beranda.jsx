@@ -8,13 +8,16 @@ import Footer from './Footer';
 
 import TestimoniPage from '../Testimoni/TestimoniPage'; 
 
-export default function Beranda() {
+// 🔥 1. Tangkap prop onOpenLogin dari App.jsx 🔥
+export default function Beranda({ onOpenLogin }) {
   const [showFullReview, setShowFullReview] = useState(false);
 
   return (
-    // UBAH: Background jadi Ash Gray, Teks jadi gelap
+    // UBAH: Background jadi Ash প্রাধান্য Gray, Teks jadi gelap
     <div className="bg-[#f8f9fa] min-h-screen text-gray-900 font-sans pb-20 md:pb-0">
-      <Navbar />
+      
+      {/* 🔥 2. Lempar (passing) prop onOpenLogin ke Navbar 🔥 */}
+      <Navbar onOpenLogin={onOpenLogin} />
       
       {showFullReview ? (
         <TestimoniPage onBack={() => setShowFullReview(false)} />

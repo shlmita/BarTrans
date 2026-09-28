@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Home, Info, Grid, Star, Camera, User } from 'lucide-react';
 import logoBartrans from '../../assets/Bartrans.png'; 
-import LoginModal from './LoginModal'; 
+// 🔥 1. Hapus import LoginModal dari sini karena sudah dipindah ke App.jsx
 
-export default function Navbar() {
+// 🔥 2. Tangkap prop onOpenLogin
+export default function Navbar({ onOpenLogin }) {
   const [activeSection, setActiveSection] = useState('home');
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  // 🔥 3. Hapus state isLoginOpen dari sini
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
@@ -74,7 +75,7 @@ export default function Navbar() {
             }
           `}
         >
-          {/* Logo (Tanpa mix-blend-screen biar warna aslinya keluar) */}
+          {/* Logo */}
           <div 
             className="cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95 flex items-center" 
             onClick={() => scrollTo('home')}
@@ -115,9 +116,9 @@ export default function Navbar() {
               <Camera size={16} className="group-hover:scale-125 group-hover:rotate-12 group-hover:text-[#f26e22] transition-all duration-300" />
             </button>
 
-            {/* Tombol Login */}
+            {/* 🔥 4. Ubah fungsi onClick menjadi onOpenLogin (Desktop) */}
             <button 
-              onClick={() => setIsLoginOpen(true)}
+              onClick={onOpenLogin}
               className="flex items-center gap-2.5 bg-white hover:bg-orange-50 border border-gray-200 hover:border-orange-200 px-1.5 py-1.5 pr-5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 group"
             >
               <div className="bg-[#f26e22] group-hover:bg-[#d95d1a] p-2 rounded-full text-white shadow-md transition-colors">
@@ -139,8 +140,9 @@ export default function Navbar() {
             />
         </div>
 
+        {/* 🔥 5. Ubah fungsi onClick menjadi onOpenLogin (Mobile) */}
         <button 
-          onClick={() => setIsLoginOpen(true)}
+          onClick={onOpenLogin}
           className="flex items-center gap-2 bg-gray-100 active:bg-gray-200 border border-gray-200 p-1 pr-3.5 rounded-full transition-all active:scale-95"
         >
           <div className="bg-[#f26e22] p-1.5 rounded-full text-white">
@@ -190,7 +192,7 @@ export default function Navbar() {
         </nav>
       </div>
 
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      {/* 🔥 6. Hapus komponen <LoginModal /> dari sini 🔥 */}
     </>
   );
 }
