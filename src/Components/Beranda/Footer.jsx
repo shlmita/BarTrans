@@ -1,19 +1,22 @@
 import React from 'react';
-import { Compass, Mail, MapPin, Phone } from 'lucide-react';
+import { Mail, MapPin, Phone } from 'lucide-react';
+import logoBartrans from '../../assets/Bartrans.png'; 
 
-export default function Footer() {
+export default function Footer({ data }) {
   return (
     <footer className="bg-white border-t border-gray-200 text-gray-600 pt-16 pb-10 px-4 md:px-8">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+        
+        {/* 🔥 UBAH: Bagian Brand Logo, Teks BarTrans & Deskripsi */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-[#00437a] font-bold text-lg">
-            <div className="p-2 bg-[#f26e22] rounded-xl text-white">
-              <Compass size={20} />
-            </div>
-            <span>Travel<span className="text-[#f26e22]">Pro</span></span>
+          <div className="flex items-center gap-3">
+            <img src={logoBartrans} alt="Logo BarTrans" className="h-10 md:h-12 w-auto object-contain" />
+            <span className="font-extrabold text-2xl tracking-tight text-[#00437a]">
+              Bar<span className="text-[#f26e22]">Trans</span>
+            </span>
           </div>
           <p className="text-xs leading-relaxed text-gray-500">
-            Solusi terpadu untuk segala kebutuhan mobilitas, sewa kendaraan, penginapan, dan paket wisata terbaik di Indonesia.
+            {data?.footer_desc || "Solusi terpadu untuk segala kebutuhan mobilitas, sewa kendaraan, penginapan, dan paket wisata terbaik di Indonesia."}
           </p>
         </div>
 
@@ -43,22 +46,22 @@ export default function Footer() {
           <ul className="space-y-3 text-xs">
             <li className="flex items-start gap-2.5">
               <MapPin size={16} className="text-[#f26e22] shrink-0 mt-0.5" />
-              <span>Jl. Raya Perjalanan No. 45, Kota Semarang, Jawa Tengah</span>
+              <span>{data?.footer_address || "Jl. Raya Perjalanan No. 45, Kota Semarang, Jawa Tengah"}</span>
             </li>
             <li className="flex items-center gap-2.5">
               <Phone size={16} className="text-[#f26e22] shrink-0" />
-              <span>+62 812-3456-7890</span>
+              <span>{data?.footer_phone || "+62 812-3456-7890"}</span>
             </li>
             <li className="flex items-center gap-2.5">
               <Mail size={16} className="text-[#f26e22] shrink-0" />
-              <span>support@travelpro.id</span>
+              <span>{data?.footer_email || "support@bartrans.id"}</span>
             </li>
           </ul>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto pt-6 border-t border-gray-200 text-center text-xs text-gray-500">
-        <p>&copy; {new Date().getFullYear()} TravelPro Indonesia. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} BarTrans Indonesia. All rights reserved.</p>
       </div>
     </footer>
   );

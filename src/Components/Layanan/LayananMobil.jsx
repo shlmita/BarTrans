@@ -1,42 +1,63 @@
 import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Car } from 'lucide-react';
 import ProductCard from '../Beranda/ProductCard';
 
-export default function LayananMobil({ onOpenModal, getPriceLabel, getButtonText }) {
+export default function KatalogMobil({ onOpenModal, getPriceLabel, getButtonText, onBack }) {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    const fetchLayanan = async () => {
+    const fetchKatalog = async () => {
       try {
         const response = await fetch('http://localhost:5000/api/mobil');
         const result = await response.json();
         
         if (result.status === 'success') {
-          const formattedData = result.data.map(mobil => ({
-            id: mobil.id,
-            title: mobil.unit,
-            img: mobil.gambar,
-            desc: mobil.deskripsi || 'Automatic / TBA / Standar',
-            price: `Rp ${Number(mobil.harga).toLocaleString('id-ID')}`,
-            tag: mobil.status
-          }));
+          const formattedData = result.data.map(mobil => {
+            let fiturArray = [];
+            try {
+              fiturArray = typeof mobil.fitur === 'string' ? JSON.parse(mobil.fitur) : (mobil.fitur || []);
+            } catch (error) {
+              fiturArray = [];
+            }
+          
+            return {
+              id: mobil.id,
+              title: mobil.unit,
+              img: mobil.gambar, 
+              deskripsi: mobil.deskripsi, // Murni dari kolom deskripsi DB
+              fitur: fiturArray,           // Array fitur dari DB
+              desc: mobil.deskripsi || 'Tidak ada deskripsi',
+              price: `Rp ${Number(mobil.harga).toLocaleString('id-ID')}`,
+              tag: mobil.status
+            };
+          });
           setData(formattedData);
         }
       } catch (error) {
-        console.error("Gagal mengambil data layanan:", error);
+        console.error("Gagal mengambil data katalog:", error);
       }
     };
-    fetchLayanan();
+    fetchKatalog();
   }, []);
 
   return (
-    <div className="animate-fade-in w-full text-left">
-      <div className="mb-8 bg-white border border-gray-200 border-l-4 border-l-[#00437a] p-5 md:p-6 rounded-r-2xl shadow-sm">
-        <h3 className="text-2xl font-bold text-[#00437a] mb-2">Sewa Mobil Pribadi & VIP</h3>
-        <p className="text-gray-600 text-sm max-w-3xl leading-relaxed">
-          Pilihan armada terbaik untuk perjalanan dinas, wisata keluarga, atau kebutuhan wedding. Tersedia opsi lepas kunci maupun dengan sopir berpengalaman. Harga sudah termasuk asuransi dasar.
+    <div className="animate-fade-in w-full text-left bg-transparent min-h-[60vh]">
+      <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-[#f26e22] mb-8 transition-colors group">
+        <ArrowLeft size={18} className="transform group-hover:-translate-x-1 transition-transform" />
+        <span className="text-sm font-semibold">Kembali ke Menu Utama</span>
+      </button>
+
+      <div className="mb-10 bg-white border border-gray-200 border-l-4 border-l-[#00437a] p-6 md:p-10 rounded-2xl md:rounded-r-3xl shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-[#00437a]"><Car size={28} /></div>
+          <h2 className="text-3xl md:text-4xl font-bold text-[#00437a]">Katalog Sewa Mobil</h2>
+        </div>
+        <p className="text-gray-600 text-sm md:text-base max-w-3xl leading-relaxed">
+          Jelajahi seluruh koleksi armada mobil kami. Mulai dari city car untuk keliling kota, MVP untuk keluarga, hingga mobil premium VIP untuk tamu penting. Semua armada dijamin bersih, terawat, dan siap jalan.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
         {data.map((item, index) => <ProductCard key={item.id} item={item} index={index} activeTab="mobil" getPriceLabel={getPriceLabel} getButtonText={getButtonText} onOpenModal={onOpenModal} />)}
       </div>
     </div>

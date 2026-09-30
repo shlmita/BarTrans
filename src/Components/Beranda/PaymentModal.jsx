@@ -5,55 +5,65 @@ import qrisImage from '../../assets/QRISAKBAR.jpeg';
 import TiketTravel from './TiketTravel';
 import InvoiceCetak from './InvoiceCetak'; 
 
-// Tambahkan prop currentUser dari luar (induk komponen)
-export default function PaymentModal({ item, isOpen, onClose, currentUser }) {
+export default function PaymentModal({ item, isOpen, onClose }) {
+  const currentUser = JSON.parse(localStorage.getItem('user'));
   const [paymentMethod, setPaymentMethod] = useState('qris');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // State form pemesan
   const [nama, setNama] = useState('');
   const [noHp, setNoHp] = useState('');
 
-  // Otomatis mengisi form jika data currentUser tersedia
   useEffect(() => {
     if (currentUser) {
-      setNama(currentUser.nama || currentUser.name || '');
-      setNoHp(currentUser.noHp || currentUser.phone || '');
+      setNama(currentUser.nama || '');
+      setNoHp(currentUser.whatsapp || ''); 
     }
   }, [currentUser]);
 
   const handleClose = () => {
     setIsSuccess(false); 
     setPaymentMethod('qris'); 
-    // Kembalikan ke data user login jika modal ditutup
-    setNama(currentUser?.nama || currentUser?.name || '');
-    setNoHp(currentUser?.noHp || currentUser?.phone || '');
+    setNama(currentUser?.nama || '');
+    setNoHp(currentUser?.whatsapp || '');
     onClose();
   };
   
-  const finalPrice = item?.calculatedTotal || item?.price;
+  const rawPrice = item?.calculatedTotal || item?.total_harga || item?.price || 0;
+  const numericPrice = typeof rawPrice === 'number' ? rawPrice : parseInt(String(rawPrice).replace(/[^0-9]/g, ''), 10) || 0;
+  const displayPrice = `Rp ${numericPrice.toLocaleString('id-ID')}`;
 
   const handleConfirmPayment = async () => {
-    if (!nama || !noHp) {
-      alert("Mohon isi Nama Lengkap dan No. WhatsApp terlebih dahulu!");
-      return;
-    }
-
     setIsLoading(true);
-
     try {
-      const numericPrice = parseInt(String(finalPrice).replace(/[^0-9]/g, ''), 10) || 0;
-      
+      let tipeLayanan = item?.layanan || 'Sewa Mobil'; 
+      let infoTambahan = '-'; 
+
+      if (item?.selectedSeats !== undefined || item?.activeTab === 'travel') {
+        tipeLayanan = 'Travel';
+        infoTambahan = `${item?.selectedSeats?.length || 1} Kursi`;
+      } else if (item?.paxCount !== undefined || item?.activeTab === 'paket' || item?.layanan === 'Paket Wisata') {
+        tipeLayanan = 'Paket Wisata'; 
+        infoTambahan = `${item?.paxCount || 1} Pax - NIK: ${item?.customerData?.identityNumber || '-'}`;
+      } else if (item?.nightsCount !== undefined || item?.activeTab === 'inap' || item?.layanan === 'Booking Penginapan') {
+        tipeLayanan = 'Penginapan'; 
+        infoTambahan = `${item?.nightsCount || 1} Malam - NIK: ${item?.identityNumber || item?.customerData?.identityNumber || '-'}`;
+      } else if (item?.distance !== undefined || item?.activeTab === 'angkut' || item?.layanan === 'Jasa Angkut') {
+        tipeLayanan = 'Jasa Angkut';
+        infoTambahan = item?.distance ? `${item.distance} KM` : '-';
+      }
+
+      const finalRute = item?.rute ? item.rute : infoTambahan;
+
       const payload = {
         nama_user: nama,
         no_hp: noHp,
-        unit_mobil: item.title,
+        layanan: tipeLayanan, 
+        unit_mobil: item.title || item.nama || item.unit || '-',
         tgl_sewa: item?.startDate || new Date().toISOString().split('T')[0],
-        durasi: item?.rentalDays || item?.paxCount || item?.nightsCount || 1, 
-        total_harga: numericPrice,
-        metode_pembayaran: paymentMethod === 'qris' ? 'QRIS' : 'Transfer Bank',
-        status: 'Pending' // Default status menunggu konfirmasi
+        rute: finalRute, 
+        total_harga: numericPrice, 
+        status: 'Pending'
       };
 
       const response = await fetch('http://localhost:5000/api/pesanan', {
@@ -65,6 +75,20 @@ export default function PaymentModal({ item, isOpen, onClose, currentUser }) {
       const result = await response.json();
       
       if (result.status === 'success') {
+        
+        // 🔥 TRIGGER AUTO-CLOSE KURSI TRAVEL 🔥
+        if (tipeLayanan === 'Travel' && item?.id && item?.selectedSeats) {
+          try {
+            await fetch(`http://localhost:5000/api/travel/${item.id}/book-seats`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ bookedSeats: item.selectedSeats })
+            });
+          } catch (err) {
+            console.error("Warning: Gagal menutup kursi di database:", err);
+          }
+        }
+
         setIsSuccess(true);
       } else {
         alert("Gagal memproses pesanan: " + result.message);
@@ -90,8 +114,27 @@ export default function PaymentModal({ item, isOpen, onClose, currentUser }) {
     document.body.removeChild(printContainer);
   };
 
-  const isTravelBooking = item?.selectedSeats !== undefined;
-  const isRentalOrAngkut = item?.rentalDays !== undefined || item?.distance !== undefined;
+  const isTravelBooking = item?.selectedSeats !== undefined || item?.layanan === 'Tiket Travel';
+  const isInvoiceService = item?.rentalDays !== undefined || item?.distance !== undefined || item?.paxCount !== undefined || item?.nightsCount !== undefined || item?.layanan === 'Booking Penginapan' || item?.layanan === 'Paket Wisata' || item?.layanan === 'Jasa Angkut' || item?.layanan === 'Sewa Mobil';
+
+  if (!currentUser && !isSuccess) {
+    return (
+      <ZoomInModal isOpen={isOpen} onClose={handleClose} modalClass="bg-white border border-gray-200 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col mx-4">
+        <div className="p-8 flex flex-col items-center justify-center text-center">
+          <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-5">
+            <User size={40} className="text-[#f26e22]" />
+          </div>
+          <h3 className="text-xl font-bold text-[#00437a] mb-2">Akses Ditolak</h3>
+          <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+            Maaf, Anda harus <strong>Login</strong> terlebih dahulu untuk dapat melanjutkan ke halaman pembayaran.
+          </p>
+          <button onClick={handleClose} className="w-full py-3.5 bg-[#f26e22] hover:bg-[#d95d1a] text-white font-bold text-sm rounded-xl transition-all shadow-md">
+            Mengerti & Tutup
+          </button>
+        </div>
+      </ZoomInModal>
+    );
+  }
 
   return (
     <>
@@ -124,19 +167,18 @@ export default function PaymentModal({ item, isOpen, onClose, currentUser }) {
                     <div className="space-y-3">
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><User size={16} className="text-gray-400" /></div>
-                        <input type="text" placeholder="Nama Lengkap" value={nama} onChange={(e) => setNama(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#f26e22] focus:bg-white transition-colors" />
+                        <input type="text" value={nama} readOnly className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm outline-none text-gray-500 cursor-not-allowed font-medium" />
                       </div>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Phone size={16} className="text-gray-400" /></div>
-                        <input type="text" placeholder="No. WhatsApp" value={noHp} onChange={(e) => setNoHp(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#f26e22] focus:bg-white transition-colors" />
+                        <input type="text" value={noHp} readOnly className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm outline-none text-gray-500 cursor-not-allowed font-medium" />
                       </div>
                     </div>
                   </div>
 
-                  {/* Ringkasan harga & Metode pembayaran tetap sama */}
                   <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-3 shadow-sm">
                     <div className="flex justify-between items-center text-sm"><span className="text-gray-500">Status</span><span className="text-gray-900 font-medium">Pending Payment</span></div>
-                    <div className="flex justify-between items-center text-sm"><span className="text-gray-500">Total</span><span className="text-[#f26e22] font-bold text-lg">{finalPrice}</span></div>
+                    <div className="flex justify-between items-center text-sm"><span className="text-gray-500">Total</span><span className="text-[#f26e22] font-bold text-lg">{displayPrice}</span></div>
                   </div>
 
                   <div>
@@ -174,8 +216,8 @@ export default function PaymentModal({ item, isOpen, onClose, currentUser }) {
             ) : (
               isTravelBooking ? (
                 <TiketTravel item={item} onPrint={handlePrint} onClose={handleClose} />
-              ) : isRentalOrAngkut ? (
-                <InvoiceCetak item={item} onPrint={handlePrint} onClose={handleClose} />
+              ) : isInvoiceService ? (
+                <InvoiceCetak item={item} onClose={handleClose} />
               ) : (
                 <div className="p-6 flex flex-col items-center justify-center animate-fade-in flex-grow overflow-y-auto bg-[#f8f9fa]">
                   <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-4"><CheckCircle size={40} className="text-emerald-500" /></div>

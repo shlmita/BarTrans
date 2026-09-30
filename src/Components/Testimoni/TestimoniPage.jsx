@@ -1,22 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MessageSquareHeart } from 'lucide-react';
-import { testimoniData } from './testimoniData';
+import axios from 'axios';
 import TestimoniFilter from './TestimoniFilter';
 import TestimoniCard from './TestimoniCard';
 
 export default function TestimoniPage({ onBack }) {
   const [activeService, setActiveService] = useState("Semua Layanan");
   const [activeRating, setActiveRating] = useState("Semua Bintang");
-  const [filteredData, setFilteredData] = useState(testimoniData);
+  
+  const [allData, setAllData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
 
+  // Ambil dari MySQL (Hanya yang Approved)
   useEffect(() => {
-    let result = testimoniData;
+    window.scrollTo(0, 0);
+    axios.get('http://localhost:5000/api/testimoni?status=Approved')
+      .then(res => {
+        // Konversi penamaan database agar pas dengan struktur TestimoniCard
+        const mappedData = res.data.map(item => ({
+          id: item.id,
+          name: item.nama,
+          service: item.layanan,
+          rating: item.rating,
+          date: new Date(item.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+          comment: item.comment,
+          avatar: item.gambar || `https://ui-avatars.com/api/?name=${item.nama.replace(/ /g, '+')}&background=00437a&color=fff`
+        }));
+        setAllData(mappedData);
+        setFilteredData(mappedData);
+      })
+      .catch(err => console.error(err));
+  }, []);
+
+  // Filter Lokal
+  useEffect(() => {
+    let result = allData;
     if (activeService !== "Semua Layanan") result = result.filter(item => item.service === activeService);
     if (activeRating !== "Semua Bintang") result = result.filter(item => item.rating === activeRating);
     setFilteredData(result);
-  }, [activeService, activeRating]);
-
-  useEffect(() => window.scrollTo(0, 0), []);
+  }, [activeService, activeRating, allData]);
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pt-24 pb-20 px-4 md:px-8 font-sans">

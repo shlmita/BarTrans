@@ -1,24 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit2, Plus, Map, Trash2, MapPin, Clock, Users } from 'lucide-react';
 import WisataFormModal from './WisataFormModal';
 
-const initialData = [
-  { 
-    id: 1, nama: 'Bromo Sunrise Open Trip', tipe: 'Open Trip', destinasi: 'Gunung Bromo, Jawa Timur', 
-    durasi: '1 Hari (Midnight)', kuota: '15', harga: 350000, status: 'Tersedia', 
-    fasilitas: ['Transportasi PP', 'Tiket Wisata', 'Jeep/Offroad', 'Dokumentasi (Foto/Video)'], gambar: '' 
-  },
-  { 
-    id: 2, nama: 'Jogja Family Gathering', tipe: 'Family Gathering', destinasi: 'Yogyakarta', 
-    durasi: '3 Hari 2 Malam', kuota: '30', harga: 1200000, status: 'Penuh', 
-    fasilitas: ['Transportasi PP', 'Penginapan/Hotel', 'Makan & Minum', 'Tour Guide'], gambar: '' 
-  },
-];
-
 export default function WisataManager() {
-  const [wisataData, setWisataData] = useState(initialData);
+  const [wisataData, setWisataData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWisata, setSelectedWisata] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 1. GET DATA DARI BACKEND
+  const fetchWisata = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/wisata');
+      const result = await res.json();
+      if (result.status === 'success') {
+        setWisataData(result.data);
+      }
+    } catch (err) {
+      console.error("Gagal memuat data wisata:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWisata();
+  }, []);
 
   const handleAddClick = () => {
     setSelectedWisata(null);
@@ -26,23 +33,63 @@ export default function WisataManager() {
   };
 
   const handleEditClick = (item) => {
-    setSelectedWisata(item);
+    // Petakan kolom backend (tujuan, min_pax) ke state form UI (destinasi, kuota)
+    setSelectedWisata({
+      ...item,
+      destinasi: item.tujuan || '',
+      kuota: item.min_pax || ''
+    });
     setIsModalOpen(true);
   };
 
-  const handleDeleteClick = (id) => {
-    if (window.confirm('Yakin ingin menghapus paket wisata ini?')) {
-      setWisataData(prev => prev.filter(item => item.id !== id));
+  // 2. DELETE DATA KE BACKEND
+  const handleDeleteClick = async (id) => {
+    if (!window.confirm('Yakin ingin menghapus paket wisata ini?')) return;
+    
+    try {
+      const res = await fetch(`http://localhost:5000/api/wisata/${id}`, { method: 'DELETE' });
+      const result = await res.json();
+      if (result.status === 'success') {
+        setWisataData(prev => prev.filter(item => item.id !== id));
+      } else {
+        alert(result.message);
+      }
+    } catch (err) {
+      console.error("Gagal menghapus:", err);
     }
   };
 
-  const handleSaveData = (formData) => {
-    if (selectedWisata) {
-      setWisataData(prev => prev.map(item => item.id === formData.id ? formData : item));
-    } else {
-      setWisataData(prev => [...prev, { ...formData, id: Date.now() }]);
+  // 3. POST / PUT DATA KE BACKEND
+  const handleSaveData = async (formData) => {
+    const isEdit = !!selectedWisata;
+    const url = isEdit ? `http://localhost:5000/api/wisata/${formData.id}` : 'http://localhost:5000/api/wisata';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    // Sesuaikan payload Frontend UI dengan struktur tabel Backend
+    const payload = {
+      ...formData,
+      tujuan: formData.destinasi, // Form UI pakai 'destinasi', DB pakai 'tujuan'
+      minPax: formData.kuota      // Form UI pakai 'kuota', DB pakai 'min_pax'
+    };
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      
+      if (result.status === 'success') {
+        fetchWisata(); // Refresh data tabel setelah berhasil simpan
+        setIsModalOpen(false);
+      } else {
+        alert("Gagal menyimpan data: " + result.message);
+      }
+    } catch (err) {
+      console.error("Error save:", err);
+      alert("Terjadi kesalahan jaringan.");
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -77,81 +124,89 @@ export default function WisataManager() {
             </tr>
           </thead>
           <tbody>
-            {wisataData.map(item => (
-              <tr key={item.id} className="bg-gray-50 hover:bg-gray-100/80 transition-colors group shadow-sm rounded-2xl">
-                
-                {/* Kolom 1: Nama, Thumbnail & Tipe */}
-                <td className="py-4 px-4 rounded-l-2xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gray-200 border border-gray-300 overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
-                      {item.gambar ? (
-                        <img src={item.gambar} alt={item.nama} className="w-full h-full object-cover" />
-                      ) : (
-                        <Map size={20} className="text-gray-400" />
-                      )}
+            {isLoading ? (
+              <tr><td colSpan="5" className="text-center py-10 text-gray-400 font-bold">Memuat data dari server...</td></tr>
+            ) : wisataData.length === 0 ? (
+              <tr><td colSpan="5" className="text-center py-10 text-gray-400 font-bold">Belum ada data paket wisata.</td></tr>
+            ) : (
+              wisataData.map(item => (
+                <tr key={item.id} className="bg-gray-50 hover:bg-gray-100/80 transition-colors group shadow-sm rounded-2xl">
+                  
+                  {/* Kolom 1: Nama, Thumbnail & Tipe */}
+                  <td className="py-4 px-4 rounded-l-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gray-200 border border-gray-300 overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
+                        {item.gambar ? (
+                          <img src={item.gambar} alt={item.nama} className="w-full h-full object-cover" />
+                        ) : (
+                          <Map size={20} className="text-gray-400" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-bold text-[#00437a] text-base">{item.nama}</div>
+                        <span className={`text-[10px] font-extrabold uppercase mt-1 px-2 py-0.5 rounded flex w-max ${
+                          item.tipe === 'Open Trip' ? 'bg-blue-100 text-blue-700' : 
+                          item.tipe === 'Private Tour' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {item.tipe || 'Paket Wisata'}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-bold text-[#00437a] text-base">{item.nama}</div>
-                      <span className={`text-[10px] font-extrabold uppercase mt-1 px-2 py-0.5 rounded flex w-max ${
-                        item.tipe === 'Open Trip' ? 'bg-blue-100 text-blue-700' : 
-                        item.tipe === 'Private Tour' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
+                  </td>
+                  
+                  {/* Kolom 2: Destinasi & Durasi */}
+                  <td className="py-4 px-4">
+                    <div className="flex flex-col gap-1.5 text-xs font-medium text-gray-600">
+                      {/* Mapping tampilan DB 'tujuan' */}
+                      <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#f26e22]"/> {item.tujuan || item.destinasi || '-'}</span>
+                      <span className="flex items-center gap-1.5"><Clock size={12} className="text-[#00437a]"/> {item.durasi}</span>
+                    </div>
+                  </td>
+                  
+                  {/* Kolom 3: Status & Kuota */}
+                  <td className="py-4 px-4">
+                    <div className="flex flex-col gap-1.5 items-start">
+                      <span className={`px-3 py-1 rounded-lg text-xs font-bold w-max block ${
+                        item.status === 'Tersedia' ? 'bg-emerald-100 text-emerald-700' : 
+                        item.status === 'Selesai' ? 'bg-gray-200 text-gray-700' : 'bg-red-100 text-red-700'
                       }`}>
-                        {item.tipe}
+                        {item.status || 'Tersedia'}
+                      </span>
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-gray-500">
+                        {/* Mapping tampilan DB 'min_pax' */}
+                        <Users size={12} /> Kuota: <span className="text-gray-800">{item.min_pax || item.kuota || 1} Pax</span>
                       </span>
                     </div>
-                  </div>
-                </td>
-                
-                {/* Kolom 2: Destinasi & Durasi */}
-                <td className="py-4 px-4">
-                  <div className="flex flex-col gap-1.5 text-xs font-medium text-gray-600">
-                    <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#f26e22]"/> {item.destinasi}</span>
-                    <span className="flex items-center gap-1.5"><Clock size={12} className="text-[#00437a]"/> {item.durasi}</span>
-                  </div>
-                </td>
-                
-                {/* Kolom 3: Status & Kuota */}
-                <td className="py-4 px-4">
-                  <div className="flex flex-col gap-1.5 items-start">
-                    <span className={`px-3 py-1 rounded-lg text-xs font-bold w-max block ${
-                      item.status === 'Tersedia' ? 'bg-emerald-100 text-emerald-700' : 
-                      item.status === 'Selesai' ? 'bg-gray-200 text-gray-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {item.status}
-                    </span>
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-gray-500">
-                      <Users size={12} /> Kuota: <span className="text-gray-800">{item.kuota} Pax</span>
-                    </span>
-                  </div>
-                </td>
-                
-                {/* Kolom 4: Harga */}
-                <td className="py-4 px-4 font-bold text-gray-800">
-                  Rp {item.harga.toLocaleString('id-ID')}
-                </td>
-                
-                {/* Kolom 5: Aksi (Edit & Hapus) */}
-                <td className="py-4 px-4 text-center rounded-r-2xl">
-                  <div className="flex items-center justify-center gap-2">
-                    <button 
-                      onClick={() => handleEditClick(item)} 
-                      title="Edit Paket Wisata"
-                      className="p-2 bg-white border border-gray-200 text-[#00437a] rounded-xl hover:bg-[#00437a] hover:text-white transition-all shadow-sm group-hover:shadow-md"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteClick(item.id)} 
-                      title="Hapus Paket"
-                      className="p-2 bg-white border border-red-100 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm group-hover:shadow-md"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
+                  </td>
+                  
+                  {/* Kolom 4: Harga */}
+                  <td className="py-4 px-4 font-bold text-gray-800">
+                    Rp {Number(item.harga).toLocaleString('id-ID')}
+                  </td>
+                  
+                  {/* Kolom 5: Aksi (Edit & Hapus) */}
+                  <td className="py-4 px-4 text-center rounded-r-2xl">
+                    <div className="flex items-center justify-center gap-2">
+                      <button 
+                        onClick={() => handleEditClick(item)} 
+                        title="Edit Paket Wisata"
+                        className="p-2 bg-white border border-gray-200 text-[#00437a] rounded-xl hover:bg-[#00437a] hover:text-white transition-all shadow-sm group-hover:shadow-md"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteClick(item.id)} 
+                        title="Hapus Paket"
+                        className="p-2 bg-white border border-red-100 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm group-hover:shadow-md"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
 
-              </tr>
-            ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

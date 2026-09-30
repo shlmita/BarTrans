@@ -3,7 +3,7 @@ import { X, Save, AlertCircle } from 'lucide-react';
 import SeatEditor from './SeatEditor'; 
 import TravelFormFields from './TravelFormFields';
 import TravelChecklist from './TravelChecklist';
-import TravelImageUpload from './TravelImageUpload'; // 🔥 Import komponen gambar
+import TravelImageUpload from './TravelImageUpload'; 
 
 export default function TravelFormModal({ isOpen, onClose, onSave, editData }) {
   const [formData, setFormData] = useState({ 
@@ -22,12 +22,14 @@ export default function TravelFormModal({ isOpen, onClose, onSave, editData }) {
     if (editData) {
       const ruteParts = editData.rute ? editData.rute.split(' - ') : ['', ''];
       setFormData({
+        id: editData.id, 
         asal: ruteParts[0] || '',
         tujuan: ruteParts[1] || '',
         unit: editData.unit,
         kursiTotal: editData.kursiTotal,
-        harga: editData.harga,
-        gambar: editData.gambar || '' // 🔥 Set gambar kalau lagi edit
+        // 🔥 MENGHAPUS DESIMAL .00 DARI MYSQL
+        harga: parseInt(editData.harga, 10) || 0,
+        gambar: editData.gambar || '' 
       });
       if (editData.seatMap && editData.seatMap.length === editData.kursiTotal) {
         setSeats(editData.seatMap);
@@ -73,7 +75,6 @@ export default function TravelFormModal({ isOpen, onClose, onSave, editData }) {
   const handleSelectAll = () => setSeats(prev => prev.map(s => ({ ...s, isReady: true })));
   const handleDeselectAll = () => setSeats(prev => prev.map(s => ({ ...s, isReady: false })));
 
-  // 🔥 Fungsi buat nangkep file gambar 🔥
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -112,62 +113,44 @@ export default function TravelFormModal({ isOpen, onClose, onSave, editData }) {
             <h3 className="font-extrabold text-2xl text-[#00437a] tracking-tight">
               {editData ? 'Update Armada & Kursi' : 'Armada Baru'}
             </h3>
-            <p className="text-gray-500 text-xs mt-0.5">Atur detail perjalanan, foto armada, lan kursi sing kasedhiya.</p>
+            <p className="text-gray-500 text-xs mt-0.5">Atur detail perjalanan, foto armada, dan kursi yang tersedia.</p>
           </div>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 bg-white hover:bg-gray-100 shadow-sm rounded-full transition-all">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col md:flex-row flex-grow overflow-hidden">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
           
-          <div className="w-full md:w-1/2 p-6 md:p-8 space-y-4 overflow-y-auto custom-scrollbar bg-white">
+          <div className="flex flex-col md:flex-row flex-grow overflow-hidden">
+            <div className="w-full md:w-1/2 p-6 md:p-8 space-y-4 overflow-y-auto custom-scrollbar bg-white">
+              <TravelImageUpload gambar={formData.gambar} onUpload={handleImageUpload} onRemove={handleRemoveImage} />
+              <TravelFormFields formData={formData} handleChange={handleChange} handleTotalKursiChange={handleTotalKursiChange} />
+              <TravelChecklist seats={seats} formData={formData} availableSeatsCount={availableSeatsCount} handleToggleSeat={handleToggleSeat} handleSelectAll={handleSelectAll} handleDeselectAll={handleDeselectAll} />
+              <div className="p-4 mt-2 bg-blue-50/50 rounded-xl border border-blue-100 flex gap-3 items-start">
+                <AlertCircle size={18} className="text-blue-500 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-gray-600 leading-relaxed">
+                  Anda bisa mencentang langsung di daftar atau mengklik gambar kursi di layar sebelah kanan.
+                </p>
+              </div>
+            </div>
             
-            {/* 🔥 Panggil komponen UPLOAD FOTO di sini 🔥 */}
-            <TravelImageUpload 
-              gambar={formData.gambar} 
-              onUpload={handleImageUpload} 
-              onRemove={handleRemoveImage} 
-            />
-            
-            <TravelFormFields 
-              formData={formData} 
-              handleChange={handleChange} 
-              handleTotalKursiChange={handleTotalKursiChange} 
-            />
-
-            <TravelChecklist 
-              seats={seats} 
-              formData={formData} 
-              availableSeatsCount={availableSeatsCount} 
-              handleToggleSeat={handleToggleSeat} 
-              handleSelectAll={handleSelectAll} 
-              handleDeselectAll={handleDeselectAll} 
-            />
-
-            <div className="p-4 mt-2 bg-blue-50/50 rounded-xl border border-blue-100 flex gap-3 items-start">
-              <AlertCircle size={18} className="text-blue-500 mt-0.5 shrink-0" />
-              <p className="text-[11px] text-gray-600 leading-relaxed">
-                Sampeyan bisa nyentang langsung ing dhaptar utawa ngeklik gambar kursi ing layar sisih tengen.
-              </p>
+            <div className="w-full md:w-1/2 p-6 md:p-8 bg-[#f8f9fa] border-l border-gray-200 flex flex-col justify-center">
+              <SeatEditor seats={seats} onToggleSeat={handleToggleSeat} />
             </div>
           </div>
 
-          <div className="w-full md:w-1/2 p-6 md:p-8 bg-[#f8f9fa] border-l border-gray-200 flex flex-col justify-center">
-            <SeatEditor seats={seats} onToggleSeat={handleToggleSeat} />
+          <div className="p-5 border-t border-gray-100 bg-[#f8f9fa] flex justify-end gap-3 shrink-0">
+            {/* 🔥 PERBAIKAN STYLING TOMBOL BAWAH BIAR RAPI 🔥 */}
+            <button type="button" onClick={onClose} className="px-6 py-3 text-sm font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-all shadow-sm">
+              Batal
+            </button>
+            <button type="submit" className="px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-[#00437a] to-[#005a9e] hover:from-[#003057] hover:to-[#00437a] rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+              <Save size={18} /> {editData ? 'Simpan Perubahan' : 'Tambahkan Unit'}
+            </button>
           </div>
-
+          
         </form>
-
-        <div className="p-5 border-t border-gray-100 bg-white flex justify-end gap-3 shrink-0">
-          <button type="button" onClick={onClose} className="px-6 py-3 text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all">
-            Batal
-          </button>
-          <button type="submit" className="px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-[#00437a] to-[#005a9e] hover:from-[#003057] hover:to-[#00437a] rounded-xl transition-all shadow-lg hover:shadow-[#00437a]/30 flex items-center gap-2">
-            <Save size={18} /> {editData ? 'Simpan Perubahan' : 'Tambahkan Unit'}
-          </button>
-        </div>
-
       </div>
     </div>
   );

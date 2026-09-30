@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Receipt, User, Phone, CheckCircle, Clock, FileText, X, Printer, MapPin, CalendarDays, Car, Truck, Palmtree, Hotel } from 'lucide-react';
-// Pastikan path logo sesuai dengan struktur foldermu. Jika beda, sesuaikan import-nya.
+import { Receipt, User, Phone, CheckCircle, Clock, FileText, X, Printer, MapPin, CalendarDays, Car, Truck, Palmtree, Hotel, Trash2 } from 'lucide-react';
 import logoBartrans from '../../assets/Bartrans.png'; 
 
 export default function PesananManager() {
@@ -33,9 +32,67 @@ export default function PesananManager() {
     return () => clearInterval(interval);
   }, []);
 
+  const getLayananInfo = (p) => {
+    const layananDB = (p?.layanan || '').toLowerCase();
+    const combined = `${layananDB} ${p?.unit_mobil || ''} ${p?.rute || ''}`.toLowerCase();
+
+    if (layananDB.includes('angkut') || combined.includes('truk') || combined.includes('box')) {
+      return { prefix: 'TRK', label: 'JASA ANGKUT', icon: Truck, name: 'Jasa Angkut Logistik', durLabel: 'Rute / Armada' };
+    }
+    if (layananDB.includes('travel') || combined.includes('tvl')) {
+      return { prefix: 'TVL', label: 'TRAVEL', icon: MapPin, name: 'Travel Antar Kota', durLabel: 'Rute' };
+    }
+    if (layananDB.includes('wisata') || layananDB.includes('paket') || combined.includes('wst')) {
+      return { prefix: 'WST', label: 'WISATA', icon: Palmtree, name: 'Paket Wisata Eksekutif', durLabel: 'Tujuan' };
+    }
+    if (layananDB.includes('penginapan') || layananDB.includes('inap') || combined.includes('hotel')) {
+      return { prefix: 'INP', label: 'PENGINAPAN', icon: Hotel, name: 'Booking Penginapan', durLabel: 'Lokasi' };
+    }
+    return { prefix: 'MBL', label: 'SEWA MOBIL', icon: Car, name: 'Sewa Mobil Pribadi', durLabel: 'Unit Mobil' };
+  };
+
+  const getFormattedIDMap = (data) => {
+    const map = {};
+    const counts = {};
+    const sorted = [...data].sort((a, b) => (a.id || 0) - (b.id || 0));
+
+    sorted.forEach((p) => {
+      const info = getLayananInfo(p);
+      counts[info.prefix] = (counts[info.prefix] || 0) + 1;
+      const paddedNum = String(counts[info.prefix]).padStart(3, '0');
+      map[p.id] = `${info.prefix}-${paddedNum}`;
+    });
+
+    return map;
+  };
+
+  const formattedIDMap = getFormattedIDMap(pesananData);
+
+  const handleDeletePesanan = async (id, displayID) => {
+    if (!window.confirm(`Yakin ingin menghapus pesanan ${displayID}?`)) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/pesanan/${id}`, {
+        method: 'DELETE'
+      });
+      const text = await response.text();
+      let result = {};
+      try { result = JSON.parse(text); } catch (err) {}
+      
+      if (response.ok || result.status === 'success') {
+        setPesananData(prev => prev.filter(p => p.id !== id));
+        if (selectedPesanan && selectedPesanan.id === id) setShowInvoice(false);
+      } else {
+        alert("Gagal menghapus pesanan: " + (result.message || "Terjadi kesalahan"));
+      }
+    } catch (error) {
+      console.error("Error delete pesanan:", error);
+    }
+  };
+
   const handleUpdateStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === 'Lunas' ? 'Pending' : 'Lunas';
-    if(!window.confirm(`Ubah status pesanan #${id} menjadi ${newStatus}?`)) return;
+    if(!window.confirm(`Ubah status pesanan menjadi ${newStatus}?`)) return;
 
     try {
       const response = await fetch(`http://localhost:5000/api/pesanan/${id}/status`, {
@@ -49,12 +106,9 @@ export default function PesananManager() {
         if(selectedPesanan && selectedPesanan.id === id) {
           setSelectedPesanan(prev => ({...prev, status: newStatus}));
         }
-      } else {
-        alert("Gagal memperbarui status: " + result.message);
       }
     } catch (error) {
       console.error("Error update status:", error);
-      alert("Gagal terhubung ke server.");
     }
   };
 
@@ -65,26 +119,6 @@ export default function PesananManager() {
     return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
-  const formatID = (id, layananStr) => {
-    let prefix = 'ORD';
-    const srv = (layananStr || 'Sewa Mobil').toUpperCase(); 
-    
-    if (srv.includes('TRAVEL')) prefix = 'TRV';
-    else if (srv.includes('MOBIL') || srv.includes('SEWA')) prefix = 'MBL';
-    else if (srv.includes('ANGKUT')) prefix = 'TRK';
-    else if (srv.includes('WISATA')) prefix = 'WST';
-    else if (srv.includes('PENGINAPAN')) prefix = 'PGN';
-
-    const paddedNum = String(id || 0).padStart(3, '0');
-    return `${prefix}-${paddedNum}`;
-  };
-
-  const handleViewInvoice = (p) => {
-    setSelectedPesanan(p);
-    setShowInvoice(true);
-  };
-
-  // 🔥 FUNGSI CETAK DARI TEMPLATE INVOICE CETAK
   const handleCetak = () => {
     const invoiceEl = document.getElementById('printable-invoice');
     if (!invoiceEl) return;
@@ -115,7 +149,7 @@ export default function PesananManager() {
               background-color: white !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
-              font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
             }
             #printable-invoice {
               margin: 0 auto;
@@ -123,13 +157,11 @@ export default function PesananManager() {
               box-shadow: none !important;
               border: 1px solid #e5e7eb !important;
             }
-            .opacity-\\[0\\.03\\] { opacity: 0.1 !important; } 
           </style>
         </head>
-        <body onload="setTimeout(function(){ window.print(); }, 1500)">
-          <div style="padding: 20px;">
-            ${invoiceEl.outerHTML}
-          </div>
+        <body>
+          <div style="padding: 20px;">${invoiceEl.outerHTML}</div>
+          <script>setTimeout(function(){ window.print(); }, 1000);</script>
         </body>
       </html>
     `;
@@ -139,42 +171,37 @@ export default function PesananManager() {
     iframeDoc.document.close();
     
     setTimeout(() => {
-        if(document.getElementById('print-frame')) {
-            document.getElementById('print-frame').remove();
-        }
+        if(document.getElementById('print-frame')) document.getElementById('print-frame').remove();
     }, 5000);
   };
 
-  // Render Logika Icon & Tipe Layanan untuk Modal Invoice
   const renderInvoiceDetails = () => {
     if (!selectedPesanan) return null;
     const p = selectedPesanan;
-    const srv = (p.layanan || 'Sewa Mobil').toUpperCase();
-    
-    let IconComponent = FileText;
-    let serviceName = 'Layanan BarTrans';
-    let durationLabel = 'Keterangan';
-    let durationValue = p.unit_mobil || p.rute || '-';
-
-    if (srv.includes('MOBIL') || srv.includes('SEWA')) {
-      serviceName = 'Sewa Mobil Pribadi'; durationLabel = 'Unit Mobil'; durationValue = p.unit_mobil || '-'; IconComponent = Car;
-    } else if (srv.includes('ANGKUT')) {
-      serviceName = 'Jasa Angkut Logistik'; durationLabel = 'Rute'; durationValue = p.rute || '-'; IconComponent = Truck;
-    } else if (srv.includes('WISATA')) {
-      serviceName = 'Paket Wisata Eksekutif'; durationLabel = 'Tujuan'; durationValue = p.rute || '-'; IconComponent = Palmtree;
-    } else if (srv.includes('PENGINAPAN')) {
-      serviceName = 'Booking Penginapan'; durationLabel = 'Lokasi'; durationValue = p.rute || '-'; IconComponent = Hotel;
-    }
+    const info = getLayananInfo(p);
+    const IconComponent = info.icon;
 
     const printDate = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
-    const finalPrice = `Rp ${p.total_harga ? p.total_harga.toLocaleString('id-ID') : '0'}`;
-    const invoiceNum = formatID(p.id, p.layanan);
+    
+    // FORMAT RUPIAH YANG RAPI
+    const numericVal = Number(p.total_harga) || 0;
+    const finalPrice = `Rp ${numericVal.toLocaleString('id-ID')}`;
+    
+    const invoiceNum = formattedIDMap[p.id] || `${info.prefix}-001`;
     const isLunas = (p.status || 'Pending') === 'Lunas';
+
+    // 🔥 LOGIKA PEMBACA NIK DARI DATABASE 🔥
+    let dbDuration = p.rute || '-';
+    let dbNik = '-';
+    
+    if (p.rute && p.rute.includes(' - NIK: ')) {
+      const parts = p.rute.split(' - NIK: ');
+      dbDuration = parts[0];
+      if (parts.length > 1) dbNik = parts[1].trim();
+    }
 
     return (
       <div className="flex flex-col w-full h-full bg-[#f8f9fa] overflow-hidden p-4 sm:p-5 relative z-10">
-        
-        {/* BADGE RINGKAS */}
         <div className={`flex items-center justify-between px-3.5 py-2 rounded-xl mb-3 shrink-0 border ${isLunas ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-orange-50 border-orange-200 text-orange-800'}`}>
           <div className="flex items-center gap-2">
             {isLunas ? <CheckCircle size={16} className="text-emerald-600 shrink-0" /> : <Clock size={16} className="text-orange-600 shrink-0" />}
@@ -185,11 +212,9 @@ export default function PesananManager() {
           </span>
         </div>
 
-        {/* KERTAS INVOICE UTAMA DARI TEMPLATE */}
         <div id="printable-invoice" className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
           <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-gray-100 flex justify-between items-start bg-white">
             <div>
-              {/* Jika path logo salah, akan menampilkan teks sebagai ganti */}
               <img src={logoBartrans} alt="BarTrans" className="h-7 w-auto object-contain mb-1" onError={(e) => e.target.style.display='none'} />
               <h4 className="font-extrabold text-[#00437a] text-xs uppercase tracking-widest mt-1">INVOICE RESMI</h4>
               <p className="text-[10px] text-gray-400 font-mono">{invoiceNum}</p>
@@ -209,13 +234,13 @@ export default function PesananManager() {
 
             <div className="bg-gray-50/80 p-3 rounded-xl border border-gray-100 relative z-10">
               <p className="text-[10px] text-gray-500 font-bold uppercase mb-1 flex items-center gap-1.5">
-                <IconComponent size={13} className="text-[#f26e22]" /> {serviceName}
+                <IconComponent size={13} className="text-[#f26e22]" /> {info.name}
               </p>
-              <h5 className="text-sm font-bold text-[#00437a] leading-tight flex items-center gap-2"><User size={14}/> {p.nama_user || '-'}</h5>
-              <p className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-2"><Phone size={12}/> {p.no_hp || '-'}</p>
+              {/* 🔥 Menggunakan dbDuration agar NIK tidak muncul di judul unit mobil */}
+              <h5 className="text-sm font-bold text-[#00437a] leading-tight">{p.unit_mobil || dbDuration}</h5>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 relative z-10 pt-1">
+            <div className="grid grid-cols-2 gap-3 relative z-10">
               <div>
                 <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5 flex items-center gap-1">
                   <CalendarDays size={11} className="text-[#00437a]" /> Tanggal Pelaksanaan
@@ -224,13 +249,35 @@ export default function PesananManager() {
               </div>
               <div>
                 <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5 flex items-center gap-1">
-                  <MapPin size={11} className="text-[#00437a]" /> {durationLabel}
+                  <MapPin size={11} className="text-[#00437a]" /> {info.durLabel}
                 </p>
-                <p className="text-xs font-bold text-[#f26e22]">{durationValue}</p>
+                {/* 🔥 Menggunakan dbDuration untuk keterangan rute/waktu murni tanpa text NIK */}
+                <p className="text-xs font-bold text-[#f26e22]">{dbDuration}</p>
               </div>
             </div>
 
-            <div className="border-t border-dashed border-gray-200 my-2 relative z-10"></div>
+            <div className="mt-2 bg-blue-50/40 p-3 rounded-xl border border-blue-100 relative z-10">
+              <p className="text-[9px] text-[#00437a] font-extrabold uppercase mb-2 border-b border-blue-100 pb-1 flex items-center gap-1.5">
+                <User size={12} /> Identitas Pemesan
+              </p>
+              <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-[11px]">
+                <div>
+                  <span className="text-gray-400 uppercase text-[8px] block font-bold">Nama Lengkap</span>
+                  <span className="font-semibold text-gray-800">{p.nama_user || '-'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 uppercase text-[8px] block font-bold">No. WhatsApp</span>
+                  <span className="font-semibold text-gray-800">{p.no_hp || '-'}</span>
+                </div>
+                {/* 🔥 MENAMPILKAN NIK DI SINI 🔥 */}
+                <div className="col-span-2">
+                  <span className="text-gray-400 uppercase text-[8px] block font-bold">NIK / No. Identitas</span>
+                  <span className="font-semibold text-gray-800">{dbNik}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-dashed border-gray-200 my-3 relative z-10"></div>
 
             <div className="space-y-1.5 relative z-10 text-[11px]">
               <div className="flex justify-between">
@@ -256,7 +303,6 @@ export default function PesananManager() {
           </div>
         </div>
 
-        {/* TOMBOL AKSI MODAL */}
         <div className="flex gap-2.5 w-full mt-3.5 pt-1 shrink-0">
           <button 
             onClick={handleCetak} 
@@ -273,6 +319,17 @@ export default function PesananManager() {
         </div>
       </div>
     );
+  };
+
+  const filterPesanan = (p) => {
+    if (filter === 'Semua') return true;
+    const info = getLayananInfo(p);
+    if (filter === 'Jasa Angkut') return info.prefix === 'TRK';
+    if (filter === 'Sewa Mobil') return info.prefix === 'MBL';
+    if (filter === 'Travel') return info.prefix === 'TVL';
+    if (filter === 'Wisata') return info.prefix === 'WST';
+    if (filter === 'Penginapan') return info.prefix === 'INP';
+    return true;
   };
 
   return (
@@ -311,16 +368,18 @@ export default function PesananManager() {
           <tbody>
             {isLoading ? (
               <tr><td colSpan="7" className="text-center py-12 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200"><p className="text-gray-400 font-bold text-sm animate-pulse">Memuat data...</p></td></tr>
-            ) : pesananData.filter(p => filter === 'Semua' || (p.layanan || 'Sewa Mobil') === filter).length === 0 ? (
+            ) : pesananData.filter(filterPesanan).length === 0 ? (
               <tr><td colSpan="7" className="text-center py-12 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200"><p className="text-gray-400 font-bold text-sm">Belum ada transaksi.</p></td></tr>
             ) : (
-              pesananData.filter(p => filter === 'Semua' || (p.layanan || 'Sewa Mobil') === filter).map((p, index) => {
-                const layananLabel = (p.layanan || 'Sewa Mobil').toUpperCase();
+              pesananData.filter(filterPesanan).map((p, index) => {
+                const info = getLayananInfo(p);
+                const displayID = formattedIDMap[p.id] || `${info.prefix}-001`;
+                const formattedPrice = `Rp ${(Number(p.total_harga) || 0).toLocaleString('id-ID')}`;
 
                 return (
                   <tr key={p.id || index} className="bg-gray-50 hover:bg-gray-100/80 transition-colors group shadow-sm rounded-2xl whitespace-nowrap">
                     <td className="py-4 px-4 rounded-l-2xl font-mono font-bold text-[#00437a]">
-                      {formatID(p.id, p.layanan)}
+                      {displayID}
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex flex-col gap-1">
@@ -330,16 +389,15 @@ export default function PesananManager() {
                     </td>
                     <td className="py-4 px-4 text-gray-700 font-medium">
                       <span className="bg-white border border-blue-100 text-[#00437a] shadow-sm px-2 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-widest mr-2 mb-1 inline-block">
-                        {layananLabel}
+                        {info.label}
                       </span>
                       <br/>{p.unit_mobil || p.rute || '-'}
                     </td>
                     <td className="py-4 px-4 text-gray-500 font-medium">
                       {formatDate(p.tgl_sewa || p.tgl)}
                     </td>
-                    <td className="py-4 px-4 font-black text-gray-800">Rp {p.total_harga ? p.total_harga.toLocaleString('id-ID') : '0'}</td>
+                    <td className="py-4 px-4 font-black text-gray-800">{formattedPrice}</td>
                     
-                    {/* KOLOM STATUS (Dipisah) */}
                     <td className="py-4 px-4 text-center">
                       <button 
                         onClick={() => handleUpdateStatus(p.id, p.status || 'Pending')}
@@ -353,15 +411,23 @@ export default function PesananManager() {
                       </button>
                     </td>
 
-                    {/* KOLOM AKSI INVOICE (Dipisah) */}
                     <td className="py-4 px-4 rounded-r-2xl text-center">
-                      <button 
-                        onClick={() => handleViewInvoice(p)} 
-                        title="Lihat & Cetak Invoice"
-                        className="p-2 mx-auto bg-blue-50 text-[#00437a] border border-blue-100 rounded-lg hover:bg-[#00437a] hover:text-white transition-colors shadow-sm inline-flex items-center justify-center"
-                      >
-                        <FileText size={16} />
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button 
+                          onClick={() => { setSelectedPesanan(p); setShowInvoice(true); }} 
+                          title="Lihat & Cetak Invoice"
+                          className="p-2 bg-blue-50 text-[#00437a] border border-blue-100 rounded-lg hover:bg-[#00437a] hover:text-white transition-colors shadow-sm inline-flex items-center justify-center"
+                        >
+                          <FileText size={16} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeletePesanan(p.id, displayID)} 
+                          title="Hapus Pesanan"
+                          className="p-2 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-600 hover:text-white transition-colors shadow-sm inline-flex items-center justify-center"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )
@@ -371,7 +437,6 @@ export default function PesananManager() {
         </table>
       </div>
 
-      {/* MODAL PREVIEW INVOICE DENGAN TEMPLATE CETAK */}
       {showInvoice && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-transparent rounded-2xl w-full max-w-md max-h-[95vh] overflow-hidden flex flex-col relative">

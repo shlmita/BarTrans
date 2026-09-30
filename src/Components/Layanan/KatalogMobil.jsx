@@ -3,10 +3,8 @@ import { ArrowLeft, Car } from 'lucide-react';
 import ProductCard from '../Beranda/ProductCard';
 
 export default function KatalogMobil({ onOpenModal, getPriceLabel, getButtonText, onBack }) {
-  // 1. State untuk menyimpan data dari database
   const [data, setData] = useState([]);
 
-  // 2. Fetch data dari Backend API
   useEffect(() => {
     const fetchKatalog = async () => {
       try {
@@ -14,16 +12,25 @@ export default function KatalogMobil({ onOpenModal, getPriceLabel, getButtonText
         const result = await response.json();
         
         if (result.status === 'success') {
-          // 3. Format data admin agar cocok dengan UI ProductCard
-          const formattedData = result.data.map(mobil => ({
-            id: mobil.id,
-            title: mobil.unit,
-            img: mobil.gambar, 
-            // Fallback teks jika admin tidak memisahkan deskripsi dengan garis miring (/)
-            desc: mobil.deskripsi || 'Automatic / TBA / Standar',
-            price: `Rp ${Number(mobil.harga).toLocaleString('id-ID')}`,
-            tag: mobil.status // Menyimpan status untuk digunakan di Modal
-          }));
+          const formattedData = result.data.map(mobil => {
+            let fiturArray = [];
+            try {
+              fiturArray = typeof mobil.fitur === 'string' ? JSON.parse(mobil.fitur) : (mobil.fitur || []);
+            } catch (error) {
+              fiturArray = [];
+            }
+          
+            return {
+              id: mobil.id,
+              title: mobil.unit,
+              img: mobil.gambar, 
+              deskripsi: mobil.deskripsi, // Murni dari kolom deskripsi DB
+              fitur: fiturArray,           // Array fitur dari DB
+              desc: mobil.deskripsi || 'Tidak ada deskripsi',
+              price: `Rp ${Number(mobil.harga).toLocaleString('id-ID')}`,
+              tag: mobil.status
+            };
+          });
           setData(formattedData);
         }
       } catch (error) {

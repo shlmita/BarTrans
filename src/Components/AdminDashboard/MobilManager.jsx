@@ -7,7 +7,6 @@ export default function MobilManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMobil, setSelectedMobil] = useState(null);
 
-  // Ambil Data dari API
   const fetchMobil = async () => {
     try {
       const response = await fetch('http://localhost:5000/api/mobil');
@@ -34,39 +33,43 @@ export default function MobilManager() {
   };
 
   const handleEditClick = (item) => {
-    setSelectedMobil(item); // Ini akan mengisi props 'editData' di Modal
+    setSelectedMobil(item);
     setIsModalOpen(true);
   };
 
-  // Simpan Data (POST/PUT) ke API
+  // 🔥 PERUBAHAN: Error handling diperbaiki
   const handleSaveData = async (formData) => {
     try {
+      let response;
       if (selectedMobil) {
-        // Proses Update (Edit)
-        const response = await fetch(`http://localhost:5000/api/mobil/${selectedMobil.id}`, {
+        response = await fetch(`http://localhost:5000/api/mobil/${selectedMobil.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
-        const result = await response.json();
-        if (result.status === 'success') fetchMobil();
       } else {
-        // Proses Tambah Baru
-        const response = await fetch('http://localhost:5000/api/mobil', {
+        response = await fetch('http://localhost:5000/api/mobil', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
-        const result = await response.json();
-        if (result.status === 'success') fetchMobil();
+      }
+      
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        fetchMobil();
+        setIsModalOpen(false); // Modal baru tertutup jika benar-benar SUKSES
+      } else {
+        // Tampilkan pesan error dari backend
+        alert("Gagal menyimpan ke database: " + result.message); 
       }
     } catch (error) {
       console.error("Gagal menyimpan data:", error);
+      alert("Terjadi kesalahan jaringan atau server mati!");
     }
-    setIsModalOpen(false);
   };
 
-  // Hapus Data (DELETE) dari API
   const handleDelete = async (id) => {
     if (window.confirm("Yakin ingin menghapus armada ini?")) {
       try {
@@ -84,7 +87,6 @@ export default function MobilManager() {
   return (
     <div className="bg-white p-6 sm:p-8 rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative animate-fade-in">
       
-      {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
           <h3 className="font-extrabold text-2xl text-[#00437a] tracking-tight flex items-center gap-2">
@@ -100,7 +102,6 @@ export default function MobilManager() {
         </button>
       </div>
       
-      {/* TABEL DATA */}
       <div className="overflow-x-auto custom-scrollbar pb-4">
         <table className="w-full text-sm text-left border-separate border-spacing-y-3">
           <thead className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">
@@ -116,8 +117,6 @@ export default function MobilManager() {
           <tbody>
             {mobilData.map(m => (
               <tr key={m.id} className="bg-gray-50 hover:bg-gray-100/80 transition-colors group shadow-sm rounded-2xl">
-                
-                {/* Kolom 1: Unit & Nopol */}
                 <td className="py-4 px-4 rounded-l-2xl">
                   <div className="flex items-center gap-3">
                     {m.gambar && (
@@ -132,7 +131,6 @@ export default function MobilManager() {
                   </div>
                 </td>
                 
-                {/* Kolom 2: Lokasi & Brand Rental */}
                 <td className="py-4 px-4">
                   <div className="flex flex-col gap-1.5">
                     <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
@@ -146,7 +144,6 @@ export default function MobilManager() {
                   </div>
                 </td>
 
-                {/* Kolom 3: Kondisi & Fitur Singkat */}
                 <td className="py-4 px-4">
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-semibold text-gray-700 flex items-center gap-1">
@@ -158,7 +155,6 @@ export default function MobilManager() {
                   </div>
                 </td>
                 
-                {/* Kolom 4: Status */}
                 <td className="py-4 px-4">
                   <div className="flex flex-col gap-1.5 items-start">
                     <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
@@ -173,12 +169,10 @@ export default function MobilManager() {
                   </div>
                 </td>
                 
-                {/* Kolom 5: Harga */}
                 <td className="py-4 px-4 font-bold text-gray-800">
                   Rp {Number(m.harga || 0).toLocaleString('id-ID')}
                 </td>
                 
-                {/* Kolom 6: Aksi */}
                 <td className="py-4 px-4 text-center rounded-r-2xl">
                   <div className="flex items-center justify-center gap-2">
                     <button 
@@ -214,7 +208,6 @@ export default function MobilManager() {
         </table>
       </div>
 
-      {/* Panggil Modal */}
       <MobilFormModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

@@ -5,19 +5,36 @@ require('dotenv').config();
 const createTables = require('./database/migrate');
 const pesananRoutes = require('./routes/pesananRoutes');
 const mobilRoutes = require('./routes/mobilRoutes');
+const authRoutes = require('./routes/authRoutes'); 
+const trukRoutes = require('./routes/trukRoutes');
+const wisataRoutes = require('./routes/wisataRoutes');
+const penginapanRoutes = require('./routes/penginapanRoutes');
+const travelRoutes = require('./routes/travelRoutes');
+const testimoniRoutes = require('./routes/testimoniRoutes');
+const webRoutes = require('./routes/webRoutes');
+const statistikRoutes = require('./routes/statistikRoutes');
 
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 createTables();
 
-// Mounting Routes
 app.use('/api/pesanan', pesananRoutes);
 app.use('/api/mobil', mobilRoutes);
+app.use('/api/auth', authRoutes); 
+app.use('/api/truk', trukRoutes);
+app.use('/api/wisata', wisataRoutes);
+app.use('/api/penginapan', penginapanRoutes);
+app.use('/api/travel', travelRoutes);
+app.use('/api/testimoni', testimoniRoutes);
+app.use('/api/web-settings', webRoutes);
+app.use('/api/statistik', statistikRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server BarTrans meluncur di port ${PORT}`);
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server BarTrans meluncur di http://0.0.0.0:${PORT}`);
 });

@@ -11,15 +11,38 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
 
   if (!isOpen) return null;
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (email === 'admin@bartrans.com' && password === 'admin123') {
-      onClose(); 
-      navigate('/admin'); 
-    } else {
-      setError('Email atau password salah! (Coba: admin@bartrans.com / admin123)');
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        const user = result.data;
+        localStorage.setItem('user', JSON.stringify(user));
+
+        // Proteksi Akses: Hanya Superadmin dan Driver yang bisa ke /admin
+        if (user.role === 'Superadmin' || user.role === 'Driver') {
+          onClose();
+          navigate('/admin');
+        } else {
+          // Jika role === 'User', tetap di halaman utama
+          onClose();
+          alert(`Selamat datang kembali, ${user.nama}!`);
+          window.location.reload(); 
+        }
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError('Gagal terhubung ke server backend!');
     }
   };
 
@@ -92,7 +115,6 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
               type="button"
               onClick={(e) => { 
                 e.preventDefault(); 
-                // 🔥 JEBAKAN BATMAN: Cek apakah props dari App.jsx beneran masuk 🔥
                 if (onSwitchToRegister) {
                   onSwitchToRegister(); 
                 } else {

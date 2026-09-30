@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit2, Plus, Truck, Trash2 } from 'lucide-react';
 import TrukFormModal from './TrukFormModal';
 
-const initialData = [
-  { id: 1, jenis: 'CDE Engkel Bak', nopol: 'K 8899 AB', kapasitas: '2.5 Ton', volume: '6 CBM', tarif: 350000, status: 'Tersedia', deskripsi: '', gambar: '' },
-  { id: 2, jenis: 'CDD Fuso Box', nopol: 'H 1234 CD', kapasitas: '5 Ton', volume: '15 CBM', tarif: 850000, status: 'Jalan', deskripsi: '', gambar: '' },
-];
-
 export default function TrukManager() {
-  const [trukData, setTrukData] = useState(initialData);
+  const [trukData, setTrukData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTruk, setSelectedTruk] = useState(null);
+
+  // Sesuaikan dengan port backend Node.js kamu (contoh port 5000)
+  const API_URL = 'http://localhost:5000/api/truk';
+
+  // Fetch Data dari Node.js API
+  const fetchTruk = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const result = await response.json();
+      if (result.status === 'success') {
+        setTrukData(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTruk();
+  }, []);
 
   const handleAddClick = () => {
     setSelectedTruk(null);
@@ -22,20 +37,46 @@ export default function TrukManager() {
     setIsModalOpen(true);
   };
 
-  // 🔥 FUNGSI HAPUS (DELETE) 🔥
-  const handleDeleteClick = (id) => {
+  // 🔥 DELETE DATA KE NODE.JS API 🔥
+  const handleDeleteClick = async (id) => {
     if (window.confirm('Yakin ingin menghapus armada truk ini?')) {
-      setTrukData(prev => prev.filter(item => item.id !== id));
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: 'DELETE',
+        });
+        const result = await response.json();
+        if (result.status === 'success') {
+          fetchTruk(); // Refresh data dari DB
+        }
+      } catch (error) {
+        console.error('Error deleting data:', error);
+      }
     }
   };
 
-  const handleSaveData = (formData) => {
-    if (selectedTruk) {
-      setTrukData(prev => prev.map(item => item.id === formData.id ? formData : item));
-    } else {
-      setTrukData(prev => [...prev, { ...formData, id: Date.now() }]);
+  // 🔥 SIMPAN/EDIT DATA KE NODE.JS API 🔥
+  const handleSaveData = async (formData) => {
+    try {
+      const isEdit = !!formData.id;
+      const url = isEdit ? `${API_URL}/${formData.id}` : API_URL;
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        fetchTruk(); // Refresh data dari DB
+        setIsModalOpen(false);
+      } else {
+        alert('Gagal menyimpan data armada');
+      }
+    } catch (error) {
+      console.error('Error saving data:', error);
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -112,7 +153,7 @@ export default function TrukManager() {
                 
                 {/* Kolom 4: Tarif */}
                 <td className="py-4 px-4 font-bold text-gray-800">
-                  Rp {t.tarif.toLocaleString('id-ID')}
+                  Rp {Number(t.tarif).toLocaleString('id-ID')}
                 </td>
                 
                 {/* Kolom 5: Aksi (Edit & Hapus) */}

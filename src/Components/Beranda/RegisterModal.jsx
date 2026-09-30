@@ -7,6 +7,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
     nama: '', whatsapp: '', email: '', nik: '', password: ''
   });
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
@@ -14,14 +15,31 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    // Simulasi daftar sukses
-    setIsSuccess(true);
-    setTimeout(() => {
-      setIsSuccess(false);
-      onSwitchToLogin(); // Otomatis pindah ke login setelah sukses
-    }, 2000);
+    setErrorMsg('');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        setIsSuccess(true);
+        setTimeout(() => {
+          setIsSuccess(false);
+          onSwitchToLogin();
+        }, 2000);
+      } else {
+        setErrorMsg(result.message);
+      }
+    } catch (error) {
+      setErrorMsg('Gagal terhubung ke server backend!');
+    }
   };
 
   return (
@@ -43,6 +61,12 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
 
           <form className="space-y-4" onSubmit={handleRegister}>
             
+            {errorMsg && (
+              <div className="bg-red-50 text-red-600 text-xs p-3 rounded-lg border border-red-100 text-center font-bold">
+                {errorMsg}
+              </div>
+            )}
+
             {isSuccess && (
               <div className="bg-emerald-50 text-emerald-600 text-xs p-3 rounded-lg border border-emerald-100 text-center font-bold">
                 Pendaftaran berhasil! Mengalihkan ke halaman Login...

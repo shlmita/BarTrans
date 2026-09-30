@@ -1,17 +1,30 @@
 import React from 'react';
+import { Home } from 'lucide-react';
 import ProductCard from '../Beranda/ProductCard';
 
 export default function LayananInap({ data, onOpenModal, getPriceLabel, getButtonText }) {
   return (
-    <div className="animate-fade-in w-full text-left">
-      <div className="mb-8 bg-white border border-gray-200 border-l-4 border-l-[#00437a] p-5 md:p-6 rounded-r-2xl shadow-sm">
-        <h3 className="text-2xl font-bold text-[#00437a] mb-2">Booking Villa & Penginapan</h3>
-        <p className="text-gray-600 text-sm max-w-3xl leading-relaxed">
+    <div className="animate-fade-in w-full text-left bg-transparent min-h-[60vh]">
+      <div className="mb-10 bg-white border border-gray-200 border-l-4 border-l-[#00437a] p-6 md:p-10 rounded-2xl md:rounded-r-3xl shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-[#00437a]">
+            <Home size={28} />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-[#00437a]">Booking Villa & Penginapan</h2>
+        </div>
+        <p className="text-gray-600 text-sm md:text-base max-w-3xl leading-relaxed">
           Temukan tempat istirahat terbaik dari hotel berbintang, homestay nyaman, hingga private villa. Harga transparan, jaminan ketersediaan kamar, dan fasilitas terlengkap.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {data.map((item, index) => <ProductCard key={item.id} item={item} index={index} activeTab="inap" getPriceLabel={getPriceLabel} getButtonText={getButtonText} onOpenModal={onOpenModal} />)}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-20">
+        {data.map((item, index) => (
+          <ProductCard 
+            key={item.id} item={item} index={index} activeTab="inap" 
+            getPriceLabel={getPriceLabel} getButtonText={getButtonText} 
+            onOpenModal={onOpenModal} 
+          />
+        ))}
       </div>
     </div>
   );

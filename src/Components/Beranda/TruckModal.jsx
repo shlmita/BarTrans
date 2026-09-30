@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, CalendarDays, MapPin, CheckCircle2, Package, ShieldCheck, Box, CreditCard, Info } from 'lucide-react';
+import { X, CalendarDays, MapPin, CheckCircle2, Package, ShieldCheck, Box, CreditCard, Info, Expand, Truck } from 'lucide-react';
 import { ZoomInModal } from '../animasi/CSSAnimasi';
 
 export default function TruckModal({ item, isOpen, onClose, onProceedCheckout }) {
@@ -16,8 +16,11 @@ export default function TruckModal({ item, isOpen, onClose, onProceedCheckout })
 
   const descParts = item?.desc.split('•') || [];
   const capacity = descParts[0]?.trim() || 'TBA';
-  const route = descParts[1]?.trim() || 'TBA';
+  const volume = descParts[1]?.trim() || 'TBA'; 
   const type = item?.title.toLowerCase().includes('box') ? 'Box Tertutup (Aman Hujan)' : 'Bak Terbuka';
+
+  // 🔥 TARIK DESKRIPSI DINAMIS DARI DATABASE 🔥
+  const serviceInfo = item?.deskripsi || item?.rawTruk?.deskripsi || 'Solusi tepat untuk pengiriman barang pindahan, distribusi bisnis, maupun material proyek. Harga sudah termasuk BBM dan supir profesional.';
 
   const isReadyToCheckout = startDate !== '';
   const buttonText = startDate === '' ? 'Pilih Tanggal Pengiriman' : 'Lanjut Pembayaran';
@@ -33,15 +36,13 @@ export default function TruckModal({ item, isOpen, onClose, onProceedCheckout })
           <div className="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-gray-100 relative h-[45%] md:h-auto overflow-y-auto shrink-0 custom-scrollbar">
             <button onClick={onClose} className="md:hidden absolute top-4 right-4 z-20 p-2 bg-white/50 backdrop-blur-md text-gray-800 hover:bg-white/80 rounded-full transition-colors"><X size={18} /></button>
 
-            <div className="w-full h-48 md:h-64 shrink-0 relative bg-gray-100">
-              <img 
-                src={item.img} 
-                alt={item.title} 
-                loading="lazy" 
-                decoding="async" 
-                className="w-full h-full object-cover" 
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+            <div className="w-full h-48 md:h-64 shrink-0 relative bg-gray-100 flex items-center justify-center overflow-hidden">
+              {item.img ? (
+                 <img src={item.img} alt={item.title} className="w-full h-full object-cover" />
+              ) : (
+                 <Truck size={60} className="text-gray-300" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
               <div className="absolute bottom-4 left-5 right-5">
                 <span className="bg-[#f26e22] text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider mb-2 block w-max shadow-lg">Armada Logistik</span>
                 <h3 className="font-bold text-2xl md:text-3xl text-white leading-tight">{item.title}</h3>
@@ -50,13 +51,26 @@ export default function TruckModal({ item, isOpen, onClose, onProceedCheckout })
 
             <div className="p-5 md:p-6 bg-white">
               <div className="grid grid-cols-3 gap-3 mb-6">
-                <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex flex-col items-center justify-center gap-1.5 text-center"><Package className="text-[#00437a]" size={20} /><span className="text-[10px] text-gray-500 uppercase font-semibold">Kapasitas</span><span className="text-xs text-gray-900 font-bold">{capacity.replace('Kapasitas ', '')}</span></div>
-                <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex flex-col items-center justify-center gap-1.5 text-center"><MapPin className="text-[#00437a]" size={20} /><span className="text-[10px] text-gray-500 uppercase font-semibold">Rute</span><span className="text-xs text-gray-900 font-bold">{route}</span></div>
-                <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex flex-col items-center justify-center gap-1.5 text-center"><Box className="text-[#00437a]" size={20} /><span className="text-[10px] text-gray-500 uppercase font-semibold">Tipe</span><span className="text-[10px] text-gray-900 font-bold leading-tight">{type}</span></div>
+                <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex flex-col items-center justify-center gap-1.5 text-center">
+                  <Package className="text-[#00437a]" size={20} />
+                  <span className="text-[10px] text-gray-500 uppercase font-semibold">Kapasitas</span>
+                  <span className="text-xs text-gray-900 font-bold">{capacity.replace('Kapasitas ', '')}</span>
+                </div>
+                <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex flex-col items-center justify-center gap-1.5 text-center">
+                  <Expand className="text-[#00437a]" size={20} />
+                  <span className="text-[10px] text-gray-500 uppercase font-semibold">Volume</span>
+                  <span className="text-xs text-gray-900 font-bold">{volume.replace('Volume ', '')}</span>
+                </div>
+                <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex flex-col items-center justify-center gap-1.5 text-center">
+                  <Box className="text-[#00437a]" size={20} />
+                  <span className="text-[10px] text-gray-500 uppercase font-semibold">Tipe</span>
+                  <span className="text-[10px] text-gray-900 font-bold leading-tight">{type}</span>
+                </div>
               </div>
               <div>
                 <h4 className="text-[#f26e22] font-semibold mb-2 text-sm flex items-center gap-2"><ShieldCheck size={18} /> Info Layanan</h4>
-                <p className="text-sm text-gray-600 leading-relaxed mb-4">Solusi tepat untuk pengiriman barang pindahan, distribusi bisnis, maupun material proyek. Harga sudah termasuk BBM dan supir profesional.</p>
+                {/* 🔥 TEKS DESKRIPSI SUDAH DINAMIS 🔥 */}
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">{serviceInfo}</p>
               </div>
             </div>
           </div>
@@ -95,10 +109,35 @@ export default function TruckModal({ item, isOpen, onClose, onProceedCheckout })
 
             <div className="p-4 md:p-6 border-t border-gray-200 bg-white shrink-0 z-20">
               <div className="flex justify-between items-end mb-4 px-1">
-                <div><p className="text-[11px] text-gray-500 mb-0.5">Tarif Total ({multiplier}x Tarif)</p><p className="text-sm font-semibold text-gray-900">Grand Total</p></div>
-                <div className="text-right"><p className="text-xl md:text-3xl font-bold text-[#00437a]">Rp {totalPrice.toLocaleString('id-ID')}</p></div>
+                <div>
+                  <p className="text-[11px] text-gray-500 mb-0.5">Tarif Total ({multiplier}x Tarif)</p>
+                  <p className="text-sm font-semibold text-gray-900">Grand Total</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl md:text-3xl font-bold text-[#00437a]">
+                    Rp {totalPrice.toLocaleString('id-ID')}
+                  </p>
+                </div>
               </div>
-              <button disabled={!isReadyToCheckout} onClick={() => onProceedCheckout({ ...item, startDate, distance, calculatedTotal: `Rp ${totalPrice.toLocaleString('id-ID')}` })} className={`w-full py-4 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 ${!isReadyToCheckout ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#f26e22] hover:bg-[#d95d1a] text-white shadow-md'}`}><CreditCard size={18} />{buttonText}</button>
+                        
+              <button 
+                disabled={!isReadyToCheckout} 
+                onClick={() => onProceedCheckout({ 
+                  ...item, 
+                  layanan: 'Jasa Angkut', // 🔥 DITAMBAHKAN DI SINI
+                  startDate, 
+                  distance, 
+                  calculatedTotal: `Rp ${totalPrice.toLocaleString('id-ID')}` 
+                })} 
+                className={`w-full py-4 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 ${
+                  !isReadyToCheckout 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-[#f26e22] hover:bg-[#d95d1a] text-white shadow-md'
+                }`}
+              >
+                <CreditCard size={18} />
+                {buttonText}
+              </button>
             </div>
           </div>
         </>

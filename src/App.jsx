@@ -1,52 +1,78 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Beranda from './Components/Beranda/beranda';
 import AdminLayout from './Components/AdminDashboard/AdminLayout'; 
 
-// 🔥 IMPORT KEDUA MODAL DI SINI 🔥
-// (Pastikan path foldernya sesuai dengan struktur folder lu ya)
 import LoginModal from './Components/Beranda/LoginModal'; 
 import RegisterModal from './Components/Beranda/RegisterModal'; 
 
+// 🔥 Komponen Proteksi Akses Halaman Admin
+const ProtectedAdminRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  // Cek apakah user sudah login dan memiliki role Superadmin atau Driver
+  if (!user || (user.role !== 'Superadmin' && user.role !== 'Driver')) {
+    alert("Akses ditolak! Halaman ini khusus untuk Admin dan Driver.");
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
 function App() {
-  // 1. Siapin State untuk ngatur buka-tutup Modal
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  
+  // 🔥 State untuk menyimpan status login secara global
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // 2. Fungsi buat Switch (Tukar) antar Modal
+  // Cek sesi login saat aplikasi pertama kali dimuat
+  useEffect(() => {
+    const loggedInUser = JSON.parse(localStorage.getItem('user'));
+    if (loggedInUser) {
+      setCurrentUser(loggedInUser);
+    }
+  }, []);
+
   const openLogin = () => {
-    setIsRegisterOpen(false); // Tutup register
-    setIsLoginOpen(true);     // Buka login
+    setIsRegisterOpen(false);
+    setIsLoginOpen(true);
   };
 
   const openRegister = () => {
-    setIsLoginOpen(false);    // Tutup login
-    setIsRegisterOpen(true);  // Buka register
+    setIsLoginOpen(false);
+    setIsRegisterOpen(true);
   };
 
   return (
     <Router>
-      
-      {/* 3. Render Modal di luar Routes biar bisa numpuk di atas semua elemen */}
+      {/* Modal Login & Register */}
       <LoginModal 
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 
-        onSwitchToRegister={openRegister} // Fungsi switch dipanggil pas tulisan "Daftar di sini" diklik
+        onSwitchToRegister={openRegister} 
       />
       
       <RegisterModal 
         isOpen={isRegisterOpen} 
         onClose={() => setIsRegisterOpen(false)} 
-        onSwitchToLogin={openLogin} // Fungsi switch dipanggil pas tulisan "Masuk di sini" diklik
+        onSwitchToLogin={openLogin} 
       />
 
       <Routes>
         {/* Halaman Utama untuk Pelanggan */}
-        {/* 🔥 Kita lempar fungsi openLogin ke Beranda sebagai props 🔥 */}
-        <Route path="/" element={<Beranda onOpenLogin={openLogin} />} />
+        {/* 🔥 currentUser dioper ke Beranda agar bisa dibaca oleh Navbar/Modal */}
+        <Route path="/" element={<Beranda onOpenLogin={openLogin} currentUser={currentUser} />} />
         
-        {/* Halaman Khusus Admin Dashboard */}
-        <Route path="/admin" element={<AdminLayout />} />
+        {/* Halaman Khusus Admin (Hanya Superadmin & Driver) */}
+        <Route 
+          path="/admin/*" 
+          element={
+            <ProtectedAdminRoute>
+              <AdminLayout />
+            </ProtectedAdminRoute>
+          } 
+        />
       </Routes>
     </Router>
   );

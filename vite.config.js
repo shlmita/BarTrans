@@ -8,4 +8,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    host: true, // 👈 Membuka akses agar bisa dibuka via IP WiFi
+    port: 5173  // 👈 Port default Vite
+  }
 })
