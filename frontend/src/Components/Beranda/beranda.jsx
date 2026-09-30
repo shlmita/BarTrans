@@ -6,7 +6,7 @@ import Services from './Service';
 import Testimonials from './Testimonials';
 import Footer from './Footer';
 import TestimoniPage from '../Testimoni/TestimoniPage'; 
-import API_URL from '../config';
+import API_URL from '../../config';
 
 export default function Beranda({ onOpenLogin }) {
   const [showFullReview, setShowFullReview] = useState(false);
