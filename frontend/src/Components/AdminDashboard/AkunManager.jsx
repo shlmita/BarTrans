@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Ban, CheckCircle } from 'lucide-react';
+import API_URL from '../../config';
 
 export default function AkunManager() {
   const [users, setUsers] = useState([]);
@@ -7,7 +8,7 @@ export default function AkunManager() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/users');
+      const response = await fetch(API_URL + '/api/auth/users');
       const result = await response.json();
       if (result.status === 'success') {
         setUsers(result.data);

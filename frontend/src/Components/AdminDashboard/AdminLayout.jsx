@@ -10,6 +10,7 @@ import WisataManager from './WisataManager';
 import WebManager from './WebManager'; 
 import ReviewManager from './ReviewManager';
 import AkunManager from './AkunManager';
+import API_URL from "../../config";
 
 import { LayoutDashboard, Receipt, Bus, CarFront, Truck, Hotel, Users, Star, Map, Globe } from 'lucide-react';
 
