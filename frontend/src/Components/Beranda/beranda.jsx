@@ -6,6 +6,7 @@ import Services from './Service';
 import Testimonials from './Testimonials';
 import Footer from './Footer';
 import TestimoniPage from '../Testimoni/TestimoniPage'; 
+import API_URL from '../config';
 
 export default function Beranda({ onOpenLogin }) {
   const [showFullReview, setShowFullReview] = useState(false);
@@ -13,7 +14,7 @@ export default function Beranda({ onOpenLogin }) {
 
   // FETCH WEB DATA
   useEffect(() => {
-    fetch('http://localhost:5000/api/web-settings')
+    fetch(API_URL + '/api/web-settings')
       .then(res => res.json())
       .then(result => {
         if(result.status === 'success') setWebData(result.data);

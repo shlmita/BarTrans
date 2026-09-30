@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import { X, Mail, Lock, LogIn } from 'lucide-react';
 import logoBartrans from '../../assets/Bartrans.png'; 
+import API_URL from '../../config';
 
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
   const [email, setEmail] = useState('');
@@ -16,7 +17,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(API_URL + '/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

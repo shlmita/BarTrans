@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home, Info, Grid, Star, Camera, User, LogOut, KeyRound, Phone, ShieldCheck, ChevronDown, X } from 'lucide-react';
 import logoBartrans from '../../assets/Bartrans.png'; 
+import API_URL from '../../config';
 
 export default function Navbar({ onOpenLogin }) {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ export default function Navbar({ onOpenLogin }) {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/users/${user.id}/profile`, {
+      const response = await fetch(`${API_URL}/api/auth/users/${user.id}/profile`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ whatsapp, password })
