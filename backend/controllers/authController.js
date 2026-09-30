@@ -4,13 +4,13 @@ const db = require('../config/db');
 exports.register = async (req, res) => {
   const { nama, whatsapp, email, nik, password } = req.body;
   try {
-    const [existing] = await db.query('SELECT * FROM akun WHERE email = ?', [email]);
+    const { rows: existing } = await db.query('SELECT * FROM akun WHERE email = $1', [email]);
     if (existing.length > 0) {
       return res.status(400).json({ status: 'error', message: 'Email sudah terdaftar!' });
     }
 
     await db.query(
-      'INSERT INTO akun (nama, whatsapp, email, nik, password, role, status) VALUES (?, ?, ?, ?, ?, "User", "Aktif")',
+      'INSERT INTO akun (nama, whatsapp, email, nik, password, role, status) VALUES ($1, $2, $3, $4, $5, \'User\', \'Aktif\')',
       [nama, whatsapp, email, nik || null, password]
     );
 
@@ -24,7 +24,7 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const [users] = await db.query('SELECT * FROM akun WHERE email = ? AND password = ?', [email, password]);
+    const { rows: users } = await db.query('SELECT * FROM akun WHERE email = $1 AND password = $2', [email, password]);
     
     if (users.length === 0) {
       return res.status(400).json({ status: 'error', message: 'Email atau password salah!' });
@@ -54,7 +54,7 @@ exports.login = async (req, res) => {
 // 3. GET ALL AKUN (Tampilan Manajemen Akun Admin)
 exports.getAllAkun = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT id, nama, whatsapp, email, role, status FROM akun ORDER BY id DESC');
+    const { rows } = await db.query('SELECT id, nama, whatsapp, email, role, status FROM akun ORDER BY id DESC');
     res.json({ status: 'success', data: rows });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
@@ -66,29 +66,27 @@ exports.toggleStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
   try {
-    await db.query('UPDATE akun SET status = ? WHERE id = ?', [status, id]);
+    await db.query('UPDATE akun SET status = $1 WHERE id = $2', [status, id]);
     res.json({ status: 'success', message: 'Status akun berhasil diperbarui!' });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
   }
 };
 
-// 5. UPDATE PROFIL (WhatsApp & Password dari Modal Edit)
+// 5. UPDATE PROFIL
 exports.updateProfile = async (req, res) => {
   const { id } = req.params;
   const { whatsapp, password } = req.body;
 
   try {
     if (password && password.trim() !== '') {
-      // Jika user mengisi password baru, update whatsapp & password
       await db.query(
-        'UPDATE akun SET whatsapp = ?, password = ? WHERE id = ?',
+        'UPDATE akun SET whatsapp = $1, password = $2 WHERE id = $3',
         [whatsapp, password, id]
       );
     } else {
-      // Jika password kosong, update whatsapp saja
       await db.query(
-        'UPDATE akun SET whatsapp = ? WHERE id = ?',
+        'UPDATE akun SET whatsapp = $1 WHERE id = $2',
         [whatsapp, id]
       );
     }
