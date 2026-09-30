@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const serverless = require('serverless-http');
 
 const createTables = require('./database/migrate');
 const pesananRoutes = require('./routes/pesananRoutes');
@@ -33,8 +34,14 @@ app.use('/api/testimoni', testimoniRoutes);
 app.use('/api/web-settings', webRoutes);
 app.use('/api/statistik', statistikRoutes);
 
-const PORT = process.env.PORT || 5000;
+// Démarrage local conditionnel (désactivé sur Vercel en production)
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server BarTrans meluncur di http://0.0.0.0:${PORT}`);
+  });
+}
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server BarTrans meluncur di http://0.0.0.0:${PORT}`);
-});
+// Exports requis pour Vercel Serverless
+module.exports = app;
+module.exports.handler = serverless(app);
