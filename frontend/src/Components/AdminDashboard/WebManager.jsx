@@ -3,6 +3,7 @@ import { Globe, LayoutTemplate, Building2, PanelBottom, Save } from 'lucide-reac
 import WebHeroSection from './WebHeroSection';
 import WebCompanySection from './WebCompanySection';
 import WebFooterSection from './WebFooterSection'; // Komponen baru yang akan kita buat
+import API_URL from '../../config';
 
 export default function WebManager() {
   const [activeSubTab, setActiveSubTab] = useState('hero');
@@ -23,7 +24,7 @@ export default function WebManager() {
 
   // Fetch Data dari API saat pertama dimuat
   useEffect(() => {
-    fetch('http://localhost:5000/api/web-settings')
+    fetch(`${API_URL}/api/web-settings`)
       .then(res => res.json())
       .then(result => {
         if (result.status === 'success' && result.data) {
@@ -72,7 +73,7 @@ export default function WebManager() {
     };
 
     try {
-      const res = await fetch('http://localhost:5000/api/web-settings', {
+      const res = await fetch(`${API_URL}/api/web-settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

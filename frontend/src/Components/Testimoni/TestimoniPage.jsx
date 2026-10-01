@@ -3,6 +3,7 @@ import { ArrowLeft, MessageSquareHeart } from 'lucide-react';
 import axios from 'axios';
 import TestimoniFilter from './TestimoniFilter';
 import TestimoniCard from './TestimoniCard';
+import API_URL from '../../config';
 
 export default function TestimoniPage({ onBack }) {
   const [activeService, setActiveService] = useState("Semua Layanan");
@@ -14,7 +15,7 @@ export default function TestimoniPage({ onBack }) {
   // Ambil dari MySQL (Hanya yang Approved)
   useEffect(() => {
     window.scrollTo(0, 0);
-    axios.get('http://localhost:5000/api/testimoni?status=Approved')
+    axios.get(`${API_URL}/api/testimoni?status=Approved`)
       .then(res => {
         // Konversi penamaan database agar pas dengan struktur TestimoniCard
         const mappedData = res.data.map(item => ({

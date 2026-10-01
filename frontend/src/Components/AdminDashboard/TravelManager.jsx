@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Edit2, Plus, Bus, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import TravelFormModal from './TravelFormModal'; 
+import API_URL from '../../config';
 
 export default function TravelManager() {
   const [travelData, setTravelData] = useState([]);
@@ -18,7 +19,7 @@ export default function TravelManager() {
   const fetchTravel = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('http://localhost:5000/api/travel');
+      const response = await axios.get(`${API_URL}/api/travel`);
       
       const formattedData = response.data.map(item => ({
         ...item,
@@ -42,9 +43,9 @@ export default function TravelManager() {
       };
 
       if (selectedTravel) {
-        await axios.put(`http://localhost:5000/api/travel/${formData.id}`, payload);
+        await axios.put(`${API_URL}/api/travel/${formData.id}`, payload);
       } else {
-        await axios.post('http://localhost:5000/api/travel', payload);
+        await axios.post(`${API_URL}/api/travel`, payload);
       }
       
       fetchTravel(); 
@@ -59,7 +60,7 @@ export default function TravelManager() {
   const handleDeleteArmada = async (id) => {
     if (window.confirm('Yakin ingin menghapus rute armada ini?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/travel/${id}`);
+        await axios.delete(`${API_URL}/api/travel/${id}`);
         setTravelData(prev => prev.filter(item => item.id !== id));
       } catch (error) {
         alert("Gagal menghapus data.");

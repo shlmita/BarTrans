@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquareHeart, Eye, EyeOff, Trash2, Star, User } from 'lucide-react';
 import axios from 'axios';
+import API_URL from '../../config';
 
 export default function ReviewManager() {
   const [testimoni, setTestimoni] = useState([]);
@@ -13,7 +14,7 @@ export default function ReviewManager() {
   const fetchTestimoni = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('http://localhost:5000/api/testimoni');
+      const res = await axios.get(`${API_URL}/api/testimoni`);
       setTestimoni(res.data);
     } catch (error) {
       console.error("Gagal mengambil data testimoni:", error);
@@ -24,7 +25,7 @@ export default function ReviewManager() {
 
   const handleUpdateStatus = async (id, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/testimoni/${id}/status`, { status: newStatus });
+      await axios.put(`${API_URL}/api/testimoni/${id}/status`, { status: newStatus });
       fetchTestimoni();
     } catch (error) {
       alert("Gagal mengupdate status ulasan.");
@@ -34,7 +35,7 @@ export default function ReviewManager() {
   const handleDelete = async (id) => {
     if (window.confirm("Yakin ingin menghapus ulasan ini secara permanen?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/testimoni/${id}`);
+        await axios.delete(`${API_URL}/api/testimoni/${id}`);
         setTestimoni(prev => prev.filter(t => t.id !== id));
       } catch (error) {
         alert("Gagal menghapus ulasan.");

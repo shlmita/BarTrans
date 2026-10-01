@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Edit2, Plus, CarFront, Info, MapPin, Building2, Trash2 } from 'lucide-react';
 import MobilFormModal from './MobilFormModal';
+import API_URL from '../../config';
 
 export default function MobilManager() {
   const [mobilData, setMobilData] = useState([]);
@@ -9,7 +10,7 @@ export default function MobilManager() {
 
   const fetchMobil = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/mobil');
+      const response = await fetch(`${API_URL}/api/mobil`);
       const result = await response.json();
       if (result.status === 'success') {
         const formattedData = result.data.map(item => ({
@@ -42,13 +43,13 @@ export default function MobilManager() {
     try {
       let response;
       if (selectedMobil) {
-        response = await fetch(`http://localhost:5000/api/mobil/${selectedMobil.id}`, {
+        response = await fetch(`${API_URL}/api/mobil/${selectedMobil.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
       } else {
-        response = await fetch('http://localhost:5000/api/mobil', {
+        response = await fetch(`${API_URL}/api/mobil`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
@@ -73,7 +74,7 @@ export default function MobilManager() {
   const handleDelete = async (id) => {
     if (window.confirm("Yakin ingin menghapus armada ini?")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/mobil/${id}`, {
+        const response = await fetch(`${API_URL}/api/mobil/${id}`, {
           method: 'DELETE'
         });
         const result = await response.json();

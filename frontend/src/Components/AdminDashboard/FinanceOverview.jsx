@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, ArrowUpRight, Clock, Users, Car, Compass, Truck, Map, Calendar, Loader2 } from 'lucide-react';
+import API_URL from '../../config';
 
 export default function FinanceOverview() {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/statistik')
+    fetch(`${API_URL}/api/statistik`)
       .then(res => res.json())
       .then(result => {
         if(result.status === 'success') {

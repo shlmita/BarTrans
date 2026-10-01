@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Edit2, Plus, Map, Trash2, MapPin, Clock, Users } from 'lucide-react';
 import WisataFormModal from './WisataFormModal';
+import API_URL from '../../config';
 
 export default function WisataManager() {
   const [wisataData, setWisataData] = useState([]);
@@ -11,7 +12,7 @@ export default function WisataManager() {
   // 1. GET DATA DARI BACKEND
   const fetchWisata = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/wisata');
+      const res = await fetch(`${API_URL}/api/wisata`);
       const result = await res.json();
       if (result.status === 'success') {
         setWisataData(result.data);
@@ -47,7 +48,7 @@ export default function WisataManager() {
     if (!window.confirm('Yakin ingin menghapus paket wisata ini?')) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/wisata/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/api/wisata/${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.status === 'success') {
         setWisataData(prev => prev.filter(item => item.id !== id));
@@ -62,7 +63,7 @@ export default function WisataManager() {
   // 3. POST / PUT DATA KE BACKEND
   const handleSaveData = async (formData) => {
     const isEdit = !!selectedWisata;
-    const url = isEdit ? `http://localhost:5000/api/wisata/${formData.id}` : 'http://localhost:5000/api/wisata';
+    const url = isEdit ? `${API_URL}/api/wisata/${formData.id}` : `${API_URL}/api/wisata`;
     const method = isEdit ? 'PUT' : 'POST';
 
     // Sesuaikan payload Frontend UI dengan struktur tabel Backend

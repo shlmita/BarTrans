@@ -23,6 +23,8 @@ import KatalogAngkut from '../Layanan/KatalogAngkut';
 import KatalogPaket from '../Layanan/KatalogPaket';
 import KatalogInap from '../Layanan/KatalogInap';
 
+import API_URL from '../../config';
+
 export default function Services() {
   const [activeTab, setActiveTab] = useState('mobil');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -40,7 +42,7 @@ export default function Services() {
   useEffect(() => {
     const fetchTrukData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/truk');
+        const response = await fetch(`${API_URL}/api/truk`);
         const result = await response.json();
         if (result.status === 'success') {
           const mappedTruk = result.data.map(truk => ({
@@ -55,7 +57,7 @@ export default function Services() {
 
     const fetchPaketData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/wisata');
+        const response = await fetch(`${API_URL}/api/wisata`);
         const result = await response.json();
         if (result.status === 'success') {
           const mappedPaket = result.data.map(paket => ({
@@ -70,7 +72,7 @@ export default function Services() {
 
     const fetchInapData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/penginapan');
+        const response = await fetch(`${API_URL}/api/penginapan`);
         const result = await response.json();
         if (Array.isArray(result)) {
           const mappedInap = result.map(inap => ({
@@ -86,7 +88,7 @@ export default function Services() {
 
     const fetchTravelData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/travel');
+        const response = await fetch(`${API_URL}/api/travel`);
         const result = await response.json();
         if (Array.isArray(result)) {
           const mappedTravel = result.map(t => ({

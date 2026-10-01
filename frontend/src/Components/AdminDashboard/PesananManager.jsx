@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Receipt, User, Phone, CheckCircle, Clock, FileText, X, Printer, MapPin, CalendarDays, Car, Truck, Palmtree, Hotel, Trash2 } from 'lucide-react';
 import logoBartrans from '../../assets/Bartrans.png'; 
+import API_URL from '../../config';
 
 export default function PesananManager() {
   const [filter, setFilter] = useState('Semua');
@@ -14,7 +15,7 @@ export default function PesananManager() {
 
   const fetchPesanan = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/pesanan');
+      const response = await fetch(`${API_URL}/api/pesanan`);
       const result = await response.json();
       if (result.status === 'success') {
         setPesananData(result.data); 
@@ -72,7 +73,7 @@ export default function PesananManager() {
     if (!window.confirm(`Yakin ingin menghapus pesanan ${displayID}?`)) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/pesanan/${id}`, {
+      const response = await fetch(`${API_URL}/api/pesanan/${id}`, {
         method: 'DELETE'
       });
       const text = await response.text();
@@ -95,7 +96,7 @@ export default function PesananManager() {
     if(!window.confirm(`Ubah status pesanan menjadi ${newStatus}?`)) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/pesanan/${id}/status`, {
+      const response = await fetch(`${API_URL}/api/pesanan/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Quote, Plus } from 'lucide-react';
 import axios from 'axios';
-import AddTestimoniModal from './AddTestimonialModal'; 
+import AddTestimoniModal from './AddTestimonialModal';
+import API_URL from '../../config'; 
 
 export default function Testimonials({ onSeeMore }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
 
   const fetchReviews = () => {
-    axios.get('http://localhost:5000/api/testimoni?status=Approved')
+    axios.get(`${API_URL}/api/testimoni?status=Approved`)
       .then(res => setReviews(res.data))
       .catch(err => console.error(err));
   };

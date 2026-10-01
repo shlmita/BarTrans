@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Car } from 'lucide-react';
 import ProductCard from '../Beranda/ProductCard';
+import API_URL from '../../config';
 
 export default function KatalogMobil({ onOpenModal, getPriceLabel, getButtonText, onBack }) {
   const [data, setData] = useState([]);
@@ -8,7 +9,7 @@ export default function KatalogMobil({ onOpenModal, getPriceLabel, getButtonText
   useEffect(() => {
     const fetchKatalog = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/mobil');
+        const response = await fetch(`${API_URL}/api/mobil`);
         const result = await response.json();
         
         if (result.status === 'success') {

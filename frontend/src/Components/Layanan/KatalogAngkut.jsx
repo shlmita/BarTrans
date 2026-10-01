@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Truck, Loader2 } from 'lucide-react';
 import ProductCard from '../Beranda/ProductCard';
+import API_URL from '../../config';
 
 export default function KatalogAngkut({ onOpenModal, getPriceLabel, getButtonText, onBack }) {
   const [trukList, setTrukList] = useState([]);
@@ -10,7 +11,7 @@ export default function KatalogAngkut({ onOpenModal, getPriceLabel, getButtonTex
   useEffect(() => {
     const fetchTruk = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/truk');
+        const response = await fetch(`${API_URL}/api/truk`);
         const result = await response.json();
         
         if (result.status === 'success') {

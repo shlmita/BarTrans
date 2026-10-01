@@ -27,7 +27,7 @@ export default function AkunManager() {
   const handleToggleStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === 'Aktif' ? 'Banned' : 'Aktif';
     try {
-      const response = await fetch(`http://localhost:5000/api/auth/users/${id}/status`, {
+      const response = await fetch(`${API_URL}/api/auth/users/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

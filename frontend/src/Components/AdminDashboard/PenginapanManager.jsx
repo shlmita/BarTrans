@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Edit2, Plus, Hotel, Trash2, Home, Bed, Info } from 'lucide-react';
 import axios from 'axios';
 import PenginapanFormModal from './PenginapanFormModal'; // Sesuaikan path jika berbeda
+import API_URL from '../../config';
 
 export default function PenginapanManager() {
   const [inapData, setInapData] = useState([]);
@@ -17,7 +18,7 @@ export default function PenginapanManager() {
   const fetchPenginapan = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('http://localhost:5000/api/penginapan');
+      const response = await axios.get(`${API_URL}/api/penginapan`);
       
       // Parse kolom 'fasilitas' yang tersimpan sebagai string JSON di database kembali menjadi Array
       const formattedData = response.data.map(item => ({
@@ -47,7 +48,7 @@ export default function PenginapanManager() {
   const handleDeleteClick = async (id) => {
     if (window.confirm('Yakin ingin menghapus data penginapan ini?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/penginapan/${id}`);
+        await axios.delete(`${API_URL}/api/penginapan/${id}`);
         // Hapus dari state lokal agar UI langsung update tanpa perlu reload
         setInapData(prev => prev.filter(item => item.id !== id));
       } catch (error) {
@@ -68,10 +69,10 @@ export default function PenginapanManager() {
 
       if (selectedInap) {
         // UPDATE (PUT)
-        await axios.put(`http://localhost:5000/api/penginapan/${formData.id}`, payload);
+        await axios.put(`${API_URL}/api/penginapan/${formData.id}`, payload);
       } else {
         // CREATE (POST)
-        await axios.post('http://localhost:5000/api/penginapan', payload);
+        await axios.post(`${API_URL}/api/penginapan`, payload);
       }
       
       fetchPenginapan(); // Tarik ulang data terbaru dari database

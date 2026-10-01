@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, PlaneTakeoff, Hotel, Car, Camera, CheckCircle2, ShieldCheck, CreditCard, Map, Utensils, Ticket, Users } from 'lucide-react';
 import { ZoomInModal } from '../animasi/CSSAnimasi';
 import FormPemesananPaket from './FormPemesananPaket';
+import API_URL from '../../config';
 
 export default function PaketModal({ item, isOpen, onClose, onProceedCheckout }) {
   const [startDate, setStartDate] = useState('');
@@ -33,7 +34,7 @@ export default function PaketModal({ item, isOpen, onClose, onProceedCheckout })
   // 2. FETCH DATA MURNI DARI API
   useEffect(() => {
     if (isOpen && item?.id) {
-      fetch('http://localhost:5000/api/wisata')
+      fetch(`${API_URL}/api/wisata`)
         .then(res => res.json())
         .then(result => {
           if (result.status === 'success') {

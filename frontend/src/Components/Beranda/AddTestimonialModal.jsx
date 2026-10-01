@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Star, User, Briefcase, MessageSquare, ImagePlus, Tag, CheckCircle } from 'lucide-react';
 import axios from 'axios';
+import API_URL from '../../config';
 
 export default function AddTestimoniModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
@@ -27,7 +28,7 @@ export default function AddTestimoniModal({ isOpen, onClose }) {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/testimoni', formData);
+      await axios.post(`${API_URL}/api/testimoni`, formData);
       // 🔥 HAPUS ALERT JADUL, GANTI JADI TAMPILAN SUKSES 🔥
       setIsSuccess(true);
       setFormData({ nama: '', role: '', layanan: 'Travel Reguler', rating: 5, comment: '', gambar: '' });

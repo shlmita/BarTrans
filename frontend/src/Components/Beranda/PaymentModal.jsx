@@ -4,6 +4,7 @@ import { ZoomInModal } from '../animasi/CSSAnimasi';
 import qrisImage from '../../assets/QRISAKBAR.jpeg'; 
 import TiketTravel from './TiketTravel';
 import InvoiceCetak from './InvoiceCetak'; 
+import API_URL from '../../config';
 
 export default function PaymentModal({ item, isOpen, onClose }) {
   const currentUser = JSON.parse(localStorage.getItem('user'));
@@ -66,7 +67,7 @@ export default function PaymentModal({ item, isOpen, onClose }) {
         status: 'Pending'
       };
 
-      const response = await fetch('http://localhost:5000/api/pesanan', {
+      const response = await fetch(`${API_URL}/api/pesanan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -79,7 +80,7 @@ export default function PaymentModal({ item, isOpen, onClose }) {
         // 🔥 TRIGGER AUTO-CLOSE KURSI TRAVEL 🔥
         if (tipeLayanan === 'Travel' && item?.id && item?.selectedSeats) {
           try {
-            await fetch(`http://localhost:5000/api/travel/${item.id}/book-seats`, {
+            await fetch(`${API_URL}/api/travel/${item.id}/book-seats`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ bookedSeats: item.selectedSeats })

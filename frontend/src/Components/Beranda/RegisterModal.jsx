@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Phone, CreditCard, UserPlus } from 'lucide-react';
 import logoBartrans from '../../assets/Bartrans.png'; 
+import API_URL from '../../config';
 
 export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
   const [formData, setFormData] = useState({
@@ -20,7 +21,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }) {
     setErrorMsg('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Edit2, Plus, Truck, Trash2 } from 'lucide-react';
 import TrukFormModal from './TrukFormModal';
+import API_URL from '../../config';
 
 export default function TrukManager() {
   const [trukData, setTrukData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTruk, setSelectedTruk] = useState(null);
 
-  // Sesuaikan dengan port backend Node.js kamu (contoh port 5000)
-  const API_URL = 'http://localhost:5000/api/truk';
-
   // Fetch Data dari Node.js API
   const fetchTruk = async () => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(`${API_URL}/api/truk`);
       const result = await response.json();
       if (result.status === 'success') {
         setTrukData(result.data);
@@ -41,7 +39,7 @@ export default function TrukManager() {
   const handleDeleteClick = async (id) => {
     if (window.confirm('Yakin ingin menghapus armada truk ini?')) {
       try {
-        const response = await fetch(`${API_URL}/${id}`, {
+        const response = await fetch(`${API_URL}/api/truk/${id}`, {
           method: 'DELETE',
         });
         const result = await response.json();
@@ -58,7 +56,7 @@ export default function TrukManager() {
   const handleSaveData = async (formData) => {
     try {
       const isEdit = !!formData.id;
-      const url = isEdit ? `${API_URL}/${formData.id}` : API_URL;
+      const url = isEdit ? `${API_URL}/api/truk/${formData.id}` : `${API_URL}/api/truk`;
       const method = isEdit ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
