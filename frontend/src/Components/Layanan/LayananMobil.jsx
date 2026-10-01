@@ -8,7 +8,7 @@ export default function KatalogMobil({ onOpenModal, getPriceLabel, getButtonText
   useEffect(() => {
     const fetchKatalog = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/mobil');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/mobil`);
         const result = await response.json();
         
         if (result.status === 'success') {
