@@ -31,8 +31,8 @@ export default function AdminLayout() {
 
   const activeMenuObj = menu.find(m => m.id === activeTab);
 
+  // 🔥 PERBAIKAN: Gunakan h-[100dvh] dan fixed inset-0 agar layar tidak ikut tembus ke-scroll 🔥
   return (
-    {/* 🔥 PERBAIKAN: Gunakan h-[100dvh] dan fixed inset-0 agar layar tidak ikut tembus ke-scroll 🔥 */}
     <div className="flex h-[100dvh] w-full fixed inset-0 bg-[#f8f9fa] overflow-hidden">
       
       <AdminSidebar menu={menu} activeTab={activeTab} setActiveTab={setActiveTab} />
